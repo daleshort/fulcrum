@@ -9,6 +9,7 @@ django-rest-framework = "*"
 drf-nested-routers = "*"
 mysqlclient = "*"
 prettier = "*"
+django-cors-headers = "*"
 
 [dev-packages]
 autopep8 = "*"
