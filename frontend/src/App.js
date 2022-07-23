@@ -9,6 +9,7 @@ import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
 import FloatingLabel from "react-bootstrap/esm/FloatingLabel";
 import Modal from "react-bootstrap/Modal";
+import Measures from "./Measures";
 
 function App() {
   function refreshProjectList() {
@@ -211,7 +212,7 @@ function App() {
               state.activeProject.toString()
           )
           .then((response) => {
-            console.log(response.data);
+            //   console.log(response.data);
             setState({
               projectDetail: response.data,
               isLoadingProjectDetail: false,
@@ -239,6 +240,7 @@ function App() {
                 return (
                   <ListGroupItem
                     action
+                    key = {x.id}
                     active={state.activeProject == x.id}
                     onClick={() => {
                       setCurrentProject(x.id);
@@ -262,11 +264,12 @@ function App() {
     );
   }
 
-
   return (
     <div className="App">
       {renderProjectList()}
       {renderProjectForm()}
+
+      <Measures activeProjectProp={state.activeProject} />
     </div>
   );
 }
