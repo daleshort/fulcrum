@@ -234,13 +234,13 @@ function App() {
   function renderProjectList() {
     return (
       <Card style={{ width: "18rem" }}>
-        <ListGroup variant="flush" as="ul">
+        <ListGroup>
           {state.projects
             ? state.projects.map((x, i) => {
                 return (
                   <ListGroupItem
                     action
-                    key = {x.id}
+                    key={x.id}
                     active={state.activeProject == x.id}
                     onClick={() => {
                       setCurrentProject(x.id);
