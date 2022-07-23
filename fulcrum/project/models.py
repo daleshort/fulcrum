@@ -32,7 +32,8 @@ class Measure(models.Model):
 class Parameter(models.Model):
     parameter = models.FloatField(null=True)
     parameter_title = models.CharField(max_length=32, null=True)
-    measure = models.ForeignKey(Measure, on_delete=models.CASCADE, null=True)
+    measure = models.ForeignKey(
+        Measure, on_delete=models.CASCADE, null=True, related_name="parameters")
 
 # a result on a given date
 
