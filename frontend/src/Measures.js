@@ -6,6 +6,8 @@ import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
 import FloatingLabel from "react-bootstrap/esm/FloatingLabel";
 import Modal from "react-bootstrap/Modal";
+import { useImmerReducer } from "use-immer";
+import { cloneDeep } from "lodash";
 
 export default function Measures({ activeProjectProp = null }) {
   //general state management
@@ -85,7 +87,7 @@ export default function Measures({ activeProjectProp = null }) {
 }
 
 function MeasureDetail({ measure, activeProjectProp, refreshMeasureList }) {
-  const [state, setState] = useReducer(
+  const [state, setState] = useImmerReducer(
     (state, newState) => ({ ...state, ...newState }),
     {
       measure: null,
@@ -94,8 +96,17 @@ function MeasureDetail({ measure, activeProjectProp, refreshMeasureList }) {
   );
 
   const handleFormChange = (event) => {
-    let copy_measure = state.measure;
-    copy_measure[event.target.name.toString()] = event.target.value;
+    let copy_measure_parameters = cloneDeep(state.measure.parameters);
+    let copy_measure = { ...state.measure };
+    copy_measure_parameters = copy_measure_parameters.map((element, index) => {
+      if (element.id == event.target.name) {
+        element.parameter = event.target.value;
+        return element;
+      } else {
+        return element;
+      }
+    });
+    copy_measure.parameters = copy_measure_parameters;
     setState({ measure: copy_measure });
   };
 
@@ -164,7 +175,7 @@ function MeasureDetail({ measure, activeProjectProp, refreshMeasureList }) {
               className="mb-3"
             >
               <Form.Control
-                name={x.parameter_title}
+                name={x.id}
                 onChange={handleFormChange}
                 onSelect={handleFormChange}
                 value={x.parameter ? x.parameter : ""}
