@@ -44,7 +44,8 @@ class ParameterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Parameter
-        fields = ['id', 'parameter', 'parameter_title', 'measure_id']
+        fields = ['id', 'parameter_float', 'parameter_date',
+                  'parameter_char', 'parameter_title', 'measure_id']
 
 
 class MeasureSerializer(serializers.ModelSerializer):
@@ -64,13 +65,9 @@ class MeasureSerializer(serializers.ModelSerializer):
 
         parameter_data = self.context['request_data'].pop('parameters')
         validated_parameter_data = validated_data.pop('parameters')
-        #note that we're using raw data from the request data and not the validated data
-        #when we go to update the nested object because we need the ID field which is stripped
-        #from validated data
-
-        print("parameter data", parameter_data)
-        print("instance", instance)
-        print("request data:", self.context['request_data'])
+        # note that we're using raw data from the request data and not the validated data
+        # when we go to update the nested object because we need the ID field which is stripped
+        # from validated data
 
         parameter_dict = dict((i.id, i) for i in instance.parameters.all())
 
@@ -105,7 +102,7 @@ class MeasureSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Measure
-        fields = ['id', 'title', 'units', 'project_id', 'parameters']
+        fields = ['id', 'title', 'units', 'type', 'project_id', 'parameters']
        # extra_kwargs = {'id': {'read_only': False, 'required': True}}
 
 
