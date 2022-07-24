@@ -54,6 +54,12 @@ export default function Measures({ activeProjectProp = null }) {
   function renderAccordion() {
     if (state.projectMeasures !== null) {
       if (state.projectMeasures !== []) {
+        const new_measure = {
+          id: "new",
+          title: "New Measure",
+          units: "test",
+          parameters: [],
+        };
         return (
           <Accordion>
             {state.projectMeasures.map((x, i) => {
@@ -70,6 +76,16 @@ export default function Measures({ activeProjectProp = null }) {
                 </Accordion.Item>
               );
             })}
+            <Accordion.Item key="new" eventKey="new">
+              <Accordion.Header>*New Measure*</Accordion.Header>
+              <Accordion.Body>
+                <MeasureDetail
+                  measure={new_measure}
+                  activeProjectProp={activeProjectProp}
+                  refreshMeasureList={loadMeasures}
+                />
+              </Accordion.Body>
+            </Accordion.Item>
           </Accordion>
         );
       }
@@ -98,14 +114,24 @@ function MeasureDetail({ measure, activeProjectProp, refreshMeasureList }) {
   const handleFormChange = (event) => {
     let copy_measure_parameters = cloneDeep(state.measure.parameters);
     let copy_measure = { ...state.measure };
-    copy_measure_parameters = copy_measure_parameters.map((element, index) => {
-      if (element.id == event.target.name) {
-        element.parameter = event.target.value;
-        return element;
-      } else {
-        return element;
-      }
-    });
+    let is_parameter_flag = false;
+    if (copy_measure_parameters) {
+      copy_measure_parameters = copy_measure_parameters.map(
+        (element, index) => {
+          if (element.id == event.target.name) {
+            element.parameter = event.target.value;
+            is_parameter_flag = true;
+            return element;
+          } else {
+            return element;
+          }
+        }
+      );
+    }
+    if (is_parameter_flag == false) {
+      copy_measure[event.target.name.toString()] = event.target.value;
+    }
+
     copy_measure.parameters = copy_measure_parameters;
     setState({ measure: copy_measure });
   };
@@ -113,25 +139,48 @@ function MeasureDetail({ measure, activeProjectProp, refreshMeasureList }) {
   const handleFormSubmit = (event) => {
     setState({ isLoading: true });
     event.preventDefault();
-    axios
-      .put(
-        "http://127.0.0.1:8000/project/projects/" +
-          activeProjectProp.toString() +
-          "/measures/" +
-          measure.id +
-          "/",
-        state.measure
-      )
-      .then((response) => {
-        console.log(response.data);
-        setState({ isLoading: false });
-        refreshMeasureList();
-      })
-      .catch((err) => {
-        console.log(err);
-        alert("issue updating project details");
-        setState({ isLoadingProjectDetail: false });
-      });
+
+    if (state.measure.id == "new") {
+      let copy_measure = { ...state.measure };
+      delete copy_measure.id;
+      axios
+        .post(
+          "http://127.0.0.1:8000/project/projects/" +
+            activeProjectProp.toString() +
+            "/measures/",
+          copy_measure
+        )
+        .then((response) => {
+          console.log(response.data);
+          setState({ isLoading: false });
+          refreshMeasureList();
+        })
+        .catch((err) => {
+          console.log(err);
+          alert("issue updating measure details");
+          setState({ isLoading: false });
+        });
+    } else {
+      axios
+        .put(
+          "http://127.0.0.1:8000/project/projects/" +
+            activeProjectProp.toString() +
+            "/measures/" +
+            measure.id +
+            "/",
+          state.measure
+        )
+        .then((response) => {
+          console.log(response.data);
+          setState({ isLoading: false });
+          refreshMeasureList();
+        })
+        .catch((err) => {
+          console.log(err);
+          alert("issue updating measure details");
+          setState({ isLoading: false });
+        });
+    }
   };
 
   useEffect(() => {
@@ -141,7 +190,38 @@ function MeasureDetail({ measure, activeProjectProp, refreshMeasureList }) {
   const [showModal, setShowModal] = useState(false);
   const handleModalClose = () => setShowModal(false);
   const handleModalShow = () => setShowModal(true);
+  const handleModalDelete = () => {
+    axios
+      .delete(
+        "http://127.0.0.1:8000/project/projects/" +
+          activeProjectProp.toString() +
+          "/measures/" +
+          measure.id +
+          "/"
+      )
+      .then((response) => {
+        console.log(response.data);
+        refreshMeasureList();
+      })
+      .catch((err) => {
+        console.log(err);
+        alert("issue updating project details");
+        setState({ isLoadingProjectDetail: false });
+      });
+  };
 
+  function renderDeleteButton() {
+    if (state.measure) {
+      console.log("state of measure id", state.measure.id);
+      if (state.measure.id != "new") {
+        return (
+            <Button variant="danger" onClick={handleModalShow}>
+            Delete
+          </Button>
+        );
+      }
+    }
+  }
   function renderDeleteModal() {
     return (
       <Modal show={showModal} onHide={handleModalClose}>
@@ -155,8 +235,7 @@ function MeasureDetail({ measure, activeProjectProp, refreshMeasureList }) {
           <Button variant="secondary" onClick={handleModalClose}>
             Cancel
           </Button>
-          <Button variant="danger">
-            {/* <Button variant="danger" onClick={handleModalDelete}> */}
+          <Button variant="danger" onClick={handleModalDelete}>
             Delete
           </Button>
         </Modal.Footer>
@@ -207,9 +286,7 @@ function MeasureDetail({ measure, activeProjectProp, refreshMeasureList }) {
         </FloatingLabel>
         {renderParameters()}
         <Button type="submit">Submit</Button>
-        <Button variant="danger" onClick={handleModalShow}>
-          Delete
-        </Button>
+        {renderDeleteButton()}
       </Form>
       {renderDeleteModal()}
     </div>
