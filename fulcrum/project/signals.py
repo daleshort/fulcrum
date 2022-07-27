@@ -19,8 +19,7 @@ def processFixed(measure):
         parameter_title="Value").parameter_float
     Results.objects.create(project=measure.project,
                            measure=measure, measure_result=parameter_float)
-# need to also call this when a measure is made but after the parameters are generated
-# send an empty put request to the measure after is it created?
+    return True
 
 
 def processRepeated(measure):
@@ -55,7 +54,7 @@ def processRepeated(measure):
         Results.objects.create(project=measure.project,
                                measure=measure, measure_result=parameter_float, date=date)
         date = date + delta
-
+    return True
     # run while loop to generate measures
 
 
@@ -69,17 +68,10 @@ def processFixedValueAtDate(measure):
         parameter_title="Date").parameter_date
     Results.objects.create(project=measure.project,
                            measure=measure, measure_result=parameter_float, date=parameter_date)
+    return True
 
-
-def processRelatedExpression(measure):
-    Results.objects.filter(measure=measure.id).delete()
-    parameter_expression = measure.parameters.get(
-        parameter_title="Expression").parameter_char
-
-    list_of_measure_ids = parseMeasuresFromExpression(
-        parameter_expression)
-    print(list_of_measure_ids)
-
+def executeDependentUpdate(measure, list_of_measure_ids) -> bool:
+    #make a list of all dates related to measure
     list_of_dates = []
     for id in list_of_measure_ids:
 
@@ -91,6 +83,9 @@ def processRelatedExpression(measure):
     list_of_dates = (list(set(list_of_dates)))
 
     print(list_of_dates)
+
+    parameter_expression = measure.parameters.get(
+        parameter_title="Expression").parameter_char
 
     my_regex = '\{p[0-9]+m[0-9]+\}'
     for d in list_of_dates:
@@ -109,6 +104,24 @@ def processRelatedExpression(measure):
         expression_result = eval(working_parameter_expression)
         Results.objects.create(project=measure.project,
                                measure=measure, measure_result=expression_result, date=d)
+    return True
+
+
+def processRelatedExpression(measure):
+    #move this down?
+    Results.objects.filter(measure=measure.id).delete()
+
+    list_of_measure_ids = get_children_by_measure(measure)
+    print(list_of_measure_ids)
+
+    child_update_results = []
+    for child in list_of_measure_ids:
+        child_update_results.append(update_measure_by_id(child))
+    if all(child_update_results):
+        return executeDependentUpdate(measure, list_of_measure_ids)
+    else:
+        return False
+
 
 
 def getMeasureResultForDateOrAssume(measure_id: int, date: datetime) -> float:
@@ -157,12 +170,31 @@ def create_results_for_measures(sender, **kwargs):
 
         measure_update_router(measure)
 
-def measure_update_router(measure):
-        if measure.type == "fixed_value":
-            processFixed(measure)
-        elif measure.type == "fixed_value_at_date":
-            processFixedValueAtDate(measure)
-        elif measure.type == "repeated":
-            processRepeated(measure)
-        elif measure.type == "related_expression":
-            processRelatedExpression(measure)
+
+def measure_update_router(measure) -> bool:
+    if measure.type == "fixed_value":
+        result = processFixed(measure)
+    elif measure.type == "fixed_value_at_date":
+        result = processFixedValueAtDate(measure)
+    elif measure.type == "repeated":
+        result =processRepeated(measure)
+    elif measure.type == "related_expression":
+        result = processRelatedExpression(measure)
+    return result
+
+def update_measure_by_id(id: int)-> bool:
+    measure = Measure.objects.get(id=id)
+    result = measure_update_router(measure)
+    return result 
+
+def get_children_by_id(id:int):
+    measure = Measure.objects.get(id=id)
+    return get_children_by_measure(measure)
+
+def get_children_by_measure(measure:Measure):
+    if measure.type == "related_expression":
+        parameter_expression = measure.parameters.get(
+            parameter_title="Expression").parameter_char
+        return parseMeasuresFromExpression(parameter_expression)
+    else:
+        return []
