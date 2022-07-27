@@ -1,14 +1,10 @@
-import React, { useReducer, useEffect, useState } from "react";
+import React, { useReducer, useEffect, useState, useRef } from "react";
 import axios from "axios";
 import "./bootstrap.min.css";
 import Accordion from "react-bootstrap/Accordion";
-import Button from "react-bootstrap/Button";
-import Form from "react-bootstrap/Form";
-import FloatingLabel from "react-bootstrap/esm/FloatingLabel";
-import Modal from "react-bootstrap/Modal";
-import { useImmerReducer } from "use-immer";
-import { cloneDeep } from "lodash";
+import "./Measures.css";
 import MeasureDetail from "./MeasureDetail";
+import Card from "react-bootstrap/Card";
 
 export default function Measures({ activeProjectProp = null }) {
   //general state management
@@ -55,6 +51,25 @@ export default function Measures({ activeProjectProp = null }) {
     }
   }, [activeProjectProp]);
 
+  const [activeEventKey, setActiveEventKey] = useState("");
+  const accordElem = useRef(null);
+
+  const handleClickToggle = (eventKey) => {
+    if (eventKey === activeEventKey) {
+      setActiveEventKey("");
+    } else {
+      setActiveEventKey(eventKey);
+      //Handle Scroll here when opening
+      setTimeout(() => {
+        accordElem.current.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+          inline: "nearest",
+        });
+      }, 400);
+    }
+  };
+
   function renderAddNewMeasure() {
     const new_measure = {
       id: "new",
@@ -65,16 +80,24 @@ export default function Measures({ activeProjectProp = null }) {
     };
     if (activeProjectProp != "new") {
       return (
-        <Accordion.Item key="new" eventKey="new">
-          <Accordion.Header>*New Measure*</Accordion.Header>
-          <Accordion.Body>
-            <MeasureDetail
-              measure={new_measure}
-              activeProjectProp={activeProjectProp}
-              refreshMeasureList={loadMeasures}
-            />
-          </Accordion.Body>
-        </Accordion.Item>
+        <Card>
+          <Accordion.Item key="new" eventKey="0" ref={accordElem}>
+            <Accordion.Header
+              onClick={() => {
+                handleClickToggle("0");
+              }}
+            >
+              *New Measure*
+            </Accordion.Header>
+            <Accordion.Body>
+              <MeasureDetail
+                measure={new_measure}
+                activeProjectProp={activeProjectProp}
+                refreshMeasureList={loadMeasures}
+              />
+            </Accordion.Body>
+          </Accordion.Item>
+        </Card>
       );
     }
   }

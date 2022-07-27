@@ -10,6 +10,7 @@ drf-nested-routers = "*"
 mysqlclient = "*"
 prettier = "*"
 django-cors-headers = "*"
+python-dateutil = "*"
 
 [dev-packages]
 autopep8 = "*"

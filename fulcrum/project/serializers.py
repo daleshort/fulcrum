@@ -63,33 +63,34 @@ class MeasureSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
 
-        parameter_data = self.context['request_data'].pop('parameters')
-        validated_parameter_data = validated_data.pop('parameters')
-        # note that we're using raw data from the request data and not the validated data
-        # when we go to update the nested object because we need the ID field which is stripped
-        # from validated data
+        if self.context['request_data'].get('parameters'):
+            parameter_data = self.context['request_data'].pop('parameters')
+            validated_parameter_data = validated_data.pop('parameters')
+            # note that we're using raw data from the request data and not the validated data
+            # when we go to update the nested object because we need the ID field which is stripped
+            # from validated data
 
-        parameter_dict = dict((i.id, i) for i in instance.parameters.all())
+            parameter_dict = dict((i.id, i) for i in instance.parameters.all())
 
-        for item_data in parameter_data:
-            if 'id' in item_data:
-                # if exists id remove from the dict and update
-                parameter_item = parameter_dict.pop(item_data['id'])
-                # remove id from validated data as we don't require it.
-                item_data.pop('id')
-                # loop through the rest of keys in validated data to assign it to its respective field
-                for key in item_data.keys():
-                    setattr(parameter_item, key, item_data[key])
+            for item_data in parameter_data:
+                if 'id' in item_data:
+                    # if exists id remove from the dict and update
+                    parameter_item = parameter_dict.pop(item_data['id'])
+                    # remove id from validated data as we don't require it.
+                    item_data.pop('id')
+                    # loop through the rest of keys in validated data to assign it to its respective field
+                    for key in item_data.keys():
+                        setattr(parameter_item, key, item_data[key])
 
-                parameter_item.save()
-            else:
-                # else create a new object
-                Parameter.objects.create(measure=instance, **item_data)
+                    parameter_item.save()
+                else:
+                    # else create a new object
+                    Parameter.objects.create(measure=instance, **item_data)
 
-    # delete remaining elements because they're not present in my update call
-        if len(parameter_dict) > 0:
-            for item in parameter_dict.values():
-                item.delete()
+        # delete remaining elements because they're not present in my update call
+            if len(parameter_dict) > 0:
+                for item in parameter_dict.values():
+                    item.delete()
 
         for attr, value in validated_data.items():
             setattr(instance, attr, value)

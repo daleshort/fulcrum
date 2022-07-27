@@ -135,6 +135,7 @@ function App() {
           activeProject: null,
           projectDetail: null,
         });
+        setShowProjectModal(false);
         //update project list
         axios
           .get("http://127.0.0.1:8000/project/projects/")
@@ -153,6 +154,7 @@ function App() {
         alert("issue updating project details");
         setState({ isLoadingProjectDetail: false });
       });
+
   };
 
   function renderDeleteModal() {
