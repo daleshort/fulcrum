@@ -54,7 +54,10 @@ export default function MeasureList({
 
   function setSelectedMeasure(measure_id) {
     setState({ selectedMeasure: measure_id });
-    returnSelectedMeasure(measure_id);
+    let measure_title = state.measures.filter((value)=>{
+      return value.id == measure_id
+    })[0].title
+    returnSelectedMeasure(measure_id,measure_title);
   }
   if(state.measures){
   return (

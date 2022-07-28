@@ -34,7 +34,9 @@ export default function MeasureDetail({
       isLoading: false,
       parameters_need_intializing: false,
       selected_project_to_insert: null,
+      project_title_to_insert:null, 
       selected_measure_to_insert: null,
+      measure_title_to_insert:null,
       relation_modal_target: null,
     }
   );
@@ -275,13 +277,13 @@ export default function MeasureDetail({
     }
   }
 
-  const handleSelectedProjectToInsert = (project_id) => {
-    setState({ selected_project_to_insert: project_id });
+  const handleSelectedProjectToInsert = (project_id,project_title) => {
+    setState({ selected_project_to_insert: project_id, project_title_to_insert:project_title });
     console.log("project to insert", project_id);
   };
 
-  const handleSelectedMeasureToInsert = (measure_id) => {
-    setState({ selected_measure_to_insert: measure_id });
+  const handleSelectedMeasureToInsert = (measure_id, measure_title) => {
+    setState({ selected_measure_to_insert: measure_id,measure_title_to_insert:measure_title });
     console.log("measure to insert", measure_id);
   };
 
@@ -311,7 +313,7 @@ export default function MeasureDetail({
           state.selected_project_to_insert +
           "m" +
           state.selected_measure_to_insert +
-          "}"
+          "}"+"["+state.project_title_to_insert+":"+state.measure_title_to_insert+"]"
       );
 
     copy_measure.parameters = copy_measure_parameters;

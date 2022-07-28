@@ -4,11 +4,6 @@
 # from multiprocessing import context
 # from urllib import request
 
-#a measure is updated
-#a signal is sent to update the results table
-#the results table remove any entries related to that measure and any parents and children
-#the results table creates new entries based on that measure and its parameters
-
 
 from itertools import product
 from rest_framework.viewsets import ModelViewSet, GenericViewSet
@@ -32,6 +27,14 @@ class MeasureViewSet(ModelViewSet):
         return {'project_id': self.kwargs['project_pk'], "request_data": self.request.data}
 # # list of all projects
 
+class VisualViewSet(ModelViewSet):
+    serializer_class = VisualSerializer
+
+    def get_queryset(self):
+        return Visual.objects.all()
+
+    def get_serializer_context(self):
+        return  {"request_data": self.request.data}
 
 class MeasureListViewSet(ModelViewSet):
     serializer_class = MeasureSerializer

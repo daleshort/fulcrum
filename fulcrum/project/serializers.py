@@ -1,6 +1,7 @@
+from pyexpat import model
 from wsgiref.validate import validator
 from rest_framework import serializers
-from .models import Measure, MeasureTag, Parameter, Project, ProjectTag
+from .models import Measure, MeasureTag, MeasureVisual, Parameter, Project, ProjectTag, Visual
 
 # https://ilovedjango.com/django/rest-api-framework/tips/save-foreign-key-using-django-rest-framework-create-method/
 
@@ -46,6 +47,65 @@ class ParameterSerializer(serializers.ModelSerializer):
         model = Parameter
         fields = ['id', 'parameter_float', 'parameter_date',
                   'parameter_char', 'parameter_title', 'measure_id']
+
+
+class MeasureVisualSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MeasureVisual
+        fields = ['project', 'measure', 'visual',
+                  'start_date', 'end_date', 'collect', 'style_color']
+
+
+class VisualSerializer(serializers.ModelSerializer):
+
+    def create(self, validated_data):
+        measurevisual_data = validated_data.pop('measurevisuals')
+        visual = Visual.objects.create(**validated_data)
+
+        for measurevisual in measurevisual_data:
+            MeasureVisual.objects.create(**measurevisual)
+        return visual
+
+    def update(self, instance, validated_data):
+
+        if self.context['request_data'].get("measurevisuals"):
+            measurevisual_data = self.context['request_data'].pop(
+                'measurevisuals')
+
+            measurevisual_dict = dict((i.id, i)
+                                      for i in instance.measurevisuals.all())
+
+            for item_data in measurevisual_data:
+                if 'id' in item_data:
+                    # if exists id remove from the dict and update
+                    measurevisual_item = measurevisual_dict.pop(
+                        item_data['id'])
+                    # remove id from validated data as we don't require it.
+                    item_data.pop('id')
+                    # loop through the rest of keys in validated data to assign it to its respective field
+                    for key in item_data.keys():
+                        setattr(measurevisual_item, key, item_data[key])
+
+                    measurevisual_item.save()
+                else:
+                    # else create a new object
+                    MeasureVisual.objects.create(visual=instance, **item_data)
+
+        # delete remaining elements because they're not present in my update call
+            if len(measurevisual_dict) > 0:
+                for item in measurevisual_dict.values():
+                    item.delete()
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        instance.save()
+        return instance
+
+    measurevisuals = MeasureVisualSerializer(many=True, read_only=False)
+
+    class Meta:
+        model = Visual
+        fields = ['title', 'type', 'measurevisuals']
 
 
 class MeasureSerializer(serializers.ModelSerializer):

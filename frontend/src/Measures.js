@@ -104,7 +104,7 @@ export default function Measures({ activeProjectProp = null }) {
 
   function renderAccordion() {
     if (state.projectMeasures !== null) {
-      if (state.projectMeasures !== []) {
+      if (state.projectMeasures !== [] && activeProjectProp !== "new") {
         return (
           <Accordion>
             {state.projectMeasures.map((x, i) => {

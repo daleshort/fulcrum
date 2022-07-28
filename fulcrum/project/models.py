@@ -32,7 +32,7 @@ class Measure(models.Model):
 class Parameter(models.Model):
     parameter_float = models.FloatField(null=True)
     parameter_date = models.DateField(null=True)
-    parameter_char = models.CharField(max_length=120, null=True)
+    parameter_char = models.CharField(max_length=500, null=True)
     parameter_title = models.CharField(max_length=32, null=True)
     measure = models.ForeignKey(
         Measure, on_delete=models.CASCADE, null=True, related_name="parameters")
@@ -52,3 +52,19 @@ class Results(models.Model):
 class MeasureTag(models.Model):
     tag_text = models.CharField(max_length=100)
     measure = models.ForeignKey(Measure, on_delete=models.CASCADE, null=True)
+
+
+class Visual(models.Model):
+    title = models.CharField(max_length=100)
+    type = models.CharField(max_length=100)
+
+class MeasureVisual(models.Model):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    measure = models.ForeignKey(Measure, on_delete=models.CASCADE)
+    visual = models.ForeignKey(
+        Visual, on_delete=models.CASCADE, null=True, related_name="measurevisuals")
+    start_date = models.DateField(null=True)
+    end_date = models.DateField(null=True)
+    collect = models.CharField(max_length=100, null=True)
+    style_color =models.CharField(max_length=100, null=True)
+

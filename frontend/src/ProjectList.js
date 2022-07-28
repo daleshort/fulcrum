@@ -38,7 +38,10 @@ export default function ProjectList({returnSelectedProject}) {
 
   function setSelectedProject(project_id) {
     setState({ selectedProject: project_id });
-    returnSelectedProject(project_id);
+    let project_title = state.projects.filter((value)=>{
+      return value.id == project_id
+    })[0].title
+    returnSelectedProject(project_id,project_title);
   }
 
   return (

@@ -1,9 +1,9 @@
-import "./App.css";
+
 import React, { useReducer, useEffect, useState } from "react";
 import axios from "axios";
 import ListGroup from "react-bootstrap/ListGroup";
 import Card from "react-bootstrap/Card";
-import "./bootstrap.min.css";
+
 import ListGroupItem from "react-bootstrap/esm/ListGroupItem";
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
@@ -11,14 +11,14 @@ import FloatingLabel from "react-bootstrap/esm/FloatingLabel";
 import Modal from "react-bootstrap/Modal";
 import Measures from "./Measures";
 
-function App() {
+export default function MeasureManager() {
   function refreshProjectList() {
     //update project list
     axios
       .get("http://127.0.0.1:8000/project/projects/")
       .then((response) => {
         console.log(response.data);
-        setState({ projects: response.data, isLoadingProjectList: false });
+        setState({ projects: response.data, isLoadingProjectList: false, activeProject:"new" });
       })
       .catch((err) => {
         console.log(err);
@@ -132,7 +132,7 @@ function App() {
         setState({
           isLoadingProjectDetail: false,
           isLoadingProjectList: true,
-          activeProject: null,
+          activeProject: "new", //not sure if this needs to be tweaked later
           projectDetail: null,
         });
         setShowProjectModal(false);
@@ -267,7 +267,7 @@ function App() {
   }
 
   return (
-    <div className="App">
+    <div >
       {renderProjectList()}
       {renderProjectForm()}
 
@@ -276,4 +276,4 @@ function App() {
   );
 }
 
-export default App;
+
