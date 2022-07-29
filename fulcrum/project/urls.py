@@ -12,6 +12,7 @@ router.register('taglist', views.ProjectTagListViewSet)
 # a list of all measures
 router.register('measures', views.MeasureListViewSet, basename='measures')
 router.register('visuals', views.VisualViewSet, basename= 'visuals')
+router.register('results', views.ResultsViewSet, basename='results')
 
 measures_router = routers.NestedDefaultRouter(
     router, 'measures', lookup='measure')

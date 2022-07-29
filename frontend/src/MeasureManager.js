@@ -85,7 +85,6 @@ export default function MeasureManager() {
   };
 
   function renderProjectForm() {
-    //this is breaking because form data isnt being set right?
     if (state.projectDetail !== null) {
       return (
         <div>

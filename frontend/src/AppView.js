@@ -11,7 +11,7 @@ export default function AppView() {
   const [state, setState] = useReducer(
     (state, newState) => ({ ...state, ...newState }),
     {
-      page: "measure manager",
+      page: "visualize",
     }
   );
 

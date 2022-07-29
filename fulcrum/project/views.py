@@ -11,10 +11,31 @@ from .models import Project, ProjectTag
 from .serializers import *
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework import viewsets
 
 # Create your views here.
 
-# measures
+
+class ResultsViewSet(viewsets.ReadOnlyModelViewSet):
+
+    serializer_class = ResultsSerializer
+
+    def get_queryset(self):
+        queryset = Results.objects.all()
+        if 'measure' in self.request.query_params:
+            measure = self.request.query_params['measure']
+            queryset = queryset.filter(measure=measure)
+        if 'start_date' in self.request.query_params:
+            start_date = self.request.query_params['start_date']
+            queryset = queryset.filter(date__gt=start_date)
+        if 'end_date' in self.request.query_params:
+            end_date = self.request.query_params['end_date']
+            queryset = queryset.filter(date__lt=end_date)
+        if 'nulldate' in self.request.query_params:
+            pass
+        else:
+            queryset = queryset.exclude(date__isnull=True)
+        return queryset
 
 
 class MeasureViewSet(ModelViewSet):
@@ -27,6 +48,7 @@ class MeasureViewSet(ModelViewSet):
         return {'project_id': self.kwargs['project_pk'], "request_data": self.request.data}
 # # list of all projects
 
+
 class VisualViewSet(ModelViewSet):
     serializer_class = VisualSerializer
 
@@ -34,7 +56,8 @@ class VisualViewSet(ModelViewSet):
         return Visual.objects.all()
 
     def get_serializer_context(self):
-        return  {"request_data": self.request.data}
+        return {"request_data": self.request.data}
+
 
 class MeasureListViewSet(ModelViewSet):
     serializer_class = MeasureSerializer
