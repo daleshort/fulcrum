@@ -1,4 +1,4 @@
-import React, { useReducer, useEffect, useState } from "react";
+import React, { useReducer, useEffect } from "react";
 import axios from "axios";
 import {
   Chart as ChartJS,
@@ -9,20 +9,20 @@ import {
   Title,
   Tooltip,
   Legend,
+  TimeScale,
 } from "chart.js";
 import { Line } from "react-chartjs-2";
-import { faker } from "@faker-js/faker";
 import { cloneDeep } from "lodash";
 
-import ListGroup from "react-bootstrap/ListGroup";
-import Card from "react-bootstrap/Card";
+
 import Accordion from "react-bootstrap/Accordion";
-import ListGroupItem from "react-bootstrap/esm/ListGroupItem";
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
 import FloatingLabel from "react-bootstrap/esm/FloatingLabel";
-import Modal from "react-bootstrap/Modal";
 import RelationPickerModal from "./RelationPickerModal";
+
+import "chartjs-adapter-date-fns";
+import { enUS } from "date-fns/locale";
 
 export default function MeasureVisuals({ visual_id = null }) {
   const [state, setState] = useReducer(
@@ -31,7 +31,7 @@ export default function MeasureVisuals({ visual_id = null }) {
       visualDetail: null,
       data: null,
       server_data_fetched: false,
-      fetch_status: null,
+      color_index_offset: Math.floor(Math.random()*10)
     }
   );
 
@@ -40,7 +40,6 @@ export default function MeasureVisuals({ visual_id = null }) {
       axios
         .get("http://127.0.0.1:8000/project/visuals/" + visual_id.toString())
         .then((response) => {
-          //   console.log(response.data);
           response.data = addNewMeasureVisualToResponse(response.data);
           setState({
             visualDetail: response.data,
@@ -53,6 +52,7 @@ export default function MeasureVisuals({ visual_id = null }) {
     }
   }
 
+  //add a blank measurevisual to the end of the list for the user to be able to add
   function addNewMeasureVisualToResponse(response_data) {
     response_data.measurevisuals.push({
       id: "new",
@@ -86,32 +86,6 @@ export default function MeasureVisuals({ visual_id = null }) {
     }
   }, [visual_id]);
 
-  function handleFormChange(event, measurevisual_id) {
-    let copy_visualDetail = { ...state.visualDetail };
-    let copy_measurevisuals = cloneDeep(
-      state.visualDetail.measurevisuals
-    ).filter((m) => {
-      return m.id == measurevisual_id;
-    });
-
-    copy_measurevisuals[0][event.target.name] = event.target.value;
-    copy_visualDetail.measurevisuals = copy_measurevisuals;
-    setState({ visualDetail: copy_visualDetail });
-  }
-
-  function checkForDeactivated(key) {
-    if (key.toLowerCase() == "id") {
-      return true;
-    } else if (key.toLowerCase() == "project") {
-      return true;
-    } else if (key.toLowerCase() == "measure") {
-      return true;
-    } else if (key.toLowerCase() == "visual") {
-      return true;
-    }
-
-    return false;
-  }
   function renderInputForm(key, value) {
     return (
       <FloatingLabel
@@ -136,7 +110,35 @@ export default function MeasureVisuals({ visual_id = null }) {
     );
     // return (<ul>{ key + ":" + value[key]}</ul>);
   }
+  function handleFormChange(event, measurevisual_id) {
+    let copy_visualDetail = { ...state.visualDetail };
+    let copy_measurevisuals = cloneDeep(
+      state.visualDetail.measurevisuals
+    ).filter((m) => {
+      return m.id == measurevisual_id;
+    });
 
+    copy_measurevisuals[0][event.target.name] = event.target.value;
+    copy_visualDetail.measurevisuals = copy_measurevisuals;
+    setState({ visualDetail: copy_visualDetail });
+  }
+
+      //set specific fields to not user editable
+  function checkForDeactivated(key) {
+    if (key.toLowerCase() == "id") {
+      return true;
+    } else if (key.toLowerCase() == "project") {
+      return true;
+    } else if (key.toLowerCase() == "measure") {
+      return true;
+    } else if (key.toLowerCase() == "visual") {
+      return true;
+    }
+    return false;
+  }
+
+
+  //submit the form data to the server
   function handleFormSubmit(event) {
     event.preventDefault();
     //update existing measurevisuals of current visual
@@ -177,26 +179,8 @@ export default function MeasureVisuals({ visual_id = null }) {
       });
   }
 
-  function renderAccordionHeaderText(value) {
-    if (value.project && value.measure) {
-      return value.project + ":" + value.measure;
-    } else if (value.id == "new") {
-      return "*Add New Measurement*";
-    }
-  }
-  function handleInsertCallBack(project, measure, id) {
-    let copy_visualDetail = { ...state.visualDetail };
-    let copy_measurevisuals = cloneDeep(state.visualDetail.measurevisuals);
-    let filtered_measurevisuals = copy_measurevisuals.filter((value) => {
-      return value.id == id;
-    });
-    let copy_measurevisual_to_set = filtered_measurevisuals[0];
-    copy_measurevisual_to_set.project = project;
-    copy_measurevisual_to_set.measure = measure;
 
-    copy_visualDetail.measurevisuals = copy_measurevisuals;
-    setState({ visualDetail: copy_visualDetail });
-  }
+
 
   function renderMeasureVisualList() {
     if (state.visualDetail) {
@@ -233,66 +217,37 @@ export default function MeasureVisuals({ visual_id = null }) {
     }
   }
 
-  function setParameterForId(id, parameter_name, value_to_set) {
+    //Make the accordion header label different if it's a new measurevisual
+  function renderAccordionHeaderText(value) {
+    if (value.project && value.measure) {
+      return value.project + ":" + value.measure;
+    } else if (value.id == "new") {
+      return "*Add New Measurement*";
+    }
+  }
+
+  //handle the return from the measure modal picker
+  function handleInsertCallBack(project, measure, id) {
     let copy_visualDetail = { ...state.visualDetail };
     let copy_measurevisuals = cloneDeep(state.visualDetail.measurevisuals);
     let filtered_measurevisuals = copy_measurevisuals.filter((value) => {
       return value.id == id;
     });
     let copy_measurevisual_to_set = filtered_measurevisuals[0];
-    copy_measurevisual_to_set[parameter_name] = value_to_set;
+    copy_measurevisual_to_set.project = project;
+    copy_measurevisual_to_set.measure = measure;
+
     copy_visualDetail.measurevisuals = copy_measurevisuals;
     setState({ visualDetail: copy_visualDetail });
   }
 
-  function getParameterForId(id, parameter_name) {
-    console.log("state visual detail:", state.visualDetail);
-    let filtered_measurevisuals = state.visualDetail.measurevisuals.filter(
-      (value) => {
-        return value.id == id;
-      }
-    );
-    console.log("filtered visuals:", filtered_measurevisuals);
-    const copy_measurevisual_to_get = filtered_measurevisuals[0];
-    console.log("copy of measure selected", copy_measurevisual_to_get);
-    const parameter_value = copy_measurevisual_to_get[parameter_name];
-
-    return parameter_value;
-  }
-
-  function doesIdHaveParameter(id, parameter_name) {
-    let filtered_measurevisuals = state.visualDetail.measurevisuals.filter(
-      (value) => {
-        return value.id == id;
-      }
-    );
-    const copy_measurevisual_to_get = filtered_measurevisuals[0];
-    return copy_measurevisual_to_get.hasOwnProperty(parameter_name);
-  }
-
-  function setFetchParameter(id, parameter_name, value_to_set) {
-    let copy_fetch_status = cloneDeep(state.fetch_status);
-    console.log("copy fetch status", copy_fetch_status);
-    let fetch_to_modify = copy_fetch_status.filter((value) => {
-      return value.id == id;
-    })[0];
-    fetch_to_modify[parameter_name] = value_to_set;
-    setState({ fetch_status: copy_fetch_status });
-  }
 
   function getResultData(id_to_get) {
     let base_url = "http://127.0.0.1:8000/project/results/";
     const measure = getParameterForId(id_to_get, "measure");
-    base_url = base_url + "?measure=" + measure;
+    base_url = base_url + "?measure=" + measure + "&nulldate=true";
     console.log(base_url);
 
-    // let copy_fetch_status = cloneDeep(state.fetch_status);
-    // let fetch_to_modify = copy_fetch_status.filter((value) => {
-    //   return value.id == fetch.id;
-    // })[0];
-    // fetch_to_modify["is_loading"] = true;
-    // fetch_to_modify["needs_update"] = false;
-    //setState({ fetch_status: copy_fetch_status });
     axios
       .get(base_url)
       .then((response) => {
@@ -309,34 +264,14 @@ export default function MeasureVisuals({ visual_id = null }) {
           id: id_to_get,
           data: response.data,
         };
-        console.log("data payload", data_payload);
-        state_to_set[server_id_name] = data_payload
-        
+        state_to_set[server_id_name] = data_payload;
+
         console.log("state to set", state_to_set);
         setState(state_to_set);
-
-        // let copy_server_data = cloneDeep(state.server_data);
-        // let filtered_data = copy_server_data.filter((value) => {
-        //   return value.id == id_to_get;
-        // });
-        // console.log("filtered data", filtered_data)
-        // if (filtered_data.length>0) {
-        //   filtered_data[0].data = response.data;
-        // } else {
-        //   copy_server_data.push({
-        //     id: id_to_get,
-        //     data: response.data,
-        //   });
-        // }
 
         // let valid_ids = state.visualDetail.measurevisuals.map((value)=>{return value.id})
         // console.log("valid IDs", valid_ids)
         // copy_server_data = copy_server_data.filter((value)=>{ return valid_ids.includes(value.id) })
-
-        // //add line in here to remove any server datas with ids that don't correspond to
-        // // measurevisual id's that are in the current visualdetail
-        // setState({meow:"meow"})
-        // setState({ server_data: copy_server_data });
       })
       .catch((err) => {
         console.log(err);
@@ -344,134 +279,145 @@ export default function MeasureVisuals({ visual_id = null }) {
       });
   }
 
-  useEffect(() => {
+
+  function getParameterForId(id, parameter_name) {
+   // console.log("state visual detail:", state.visualDetail);
+    let filtered_measurevisuals = state.visualDetail.measurevisuals.filter(
+      (value) => {
+        return value.id == id;
+      }
+    );
+  //  console.log("filtered visuals:", filtered_measurevisuals);
+    const copy_measurevisual_to_get = filtered_measurevisuals[0];
+ //   console.log("copy of measure selected", copy_measurevisual_to_get);
+    const parameter_value = copy_measurevisual_to_get[parameter_name];
+
+    return parameter_value;
+  }
+
+  function getDatasetsMaxAndMinDate(datasets) {
+    let dates = Array();
+    datasets.map((dataset) => {
+      dates = dates.concat(
+        dataset.data.map((value) => {
+          if (value.date != null) {
+            //  console.log("value date:", new Date(value.date));
+            return new Date(value.date);
+            // return Date.parse(value.date);
+          } else {
+            return null;
+          }
+        })
+      );
+    });
+    dates = dates.filter((value) => {
+      return value !== null;
+    });
+
+    var max_date = new Date(Math.max.apply(null, dates));
+    var min_date = new Date(Math.min.apply(null, dates));
+
+    function formatDate(date) {
+      var dd = date.getDate() + 1;
+      var mm = date.getMonth() + 1; //January is 0!
+      var yyyy = date.getFullYear();
+      if (dd < 10) {
+        dd = "0" + dd;
+      }
+      if (mm < 10) {
+        mm = "0" + mm;
+      }
+      //return dd + '-' + mm + '-' + yyyy;
+      return yyyy + "-" + mm + "-" + dd;
+    }
+
+    let max_date_str = formatDate(max_date);
+    let min_date_str = formatDate(min_date);
+
+    return [min_date_str, max_date_str];
+  }
+
+  function setMinAndMaxDateToDatasets(datasets, min_date, max_date) {
+    datasets = datasets.map((dataset) => {
+
+      if (dataset.data.length == 1) {
+        if (dataset.data[0].date == null) {
+          //if null date measurement
+
+          //add a second copy of the data
+          dataset.data.push(cloneDeep(dataset.data[0]));
+          //make one the min date and make one the max date
+          dataset.data[0].date = min_date;
+          dataset.data[1].date = max_date;
+
+          return dataset;
+        }
+      } else {
+        dataset.data = dataset.data.filter((value) => {
+          return value.date !== null;
+        });
+        return dataset;
+      }
+    });
+    return datasets;
+  }
+
+function makeDatasetsFromServerData(){
+    const default_colors=["rgb(34, 146, 220)", "rgb(194, 227, 244)","rgb(252, 211, 61)","rgb(92, 183, 228)","rgb(237, 100, 30)","rgb(237, 40, 40)"]
+
     if (state.visualDetail) {
-      console.log("here in loop");
+      let datasets = Array();
       let valid_ids = state.visualDetail.measurevisuals.map((value) => {
         return value.id;
       });
       valid_ids = valid_ids.filter((value) => {
         return value !== "new";
       });
-      console.log("valid ids", valid_ids);
+      console.log("valid ids:", valid_ids)
+      
+      var color_index = state.color_index_offset
       valid_ids.map((id) => {
-        console.log(
-          "server data" + id.toString(),
-          state["server_data_" + id.toString()]
-        );
+        if (state["server_data_" + id.toString()]) {
+          if (state["server_data_" + id.toString()].hasOwnProperty("data")) {
+            color_index = color_index +1
+            if(color_index>default_colors.length-1){
+              color_index = 0;
+            }
+            console.log("color is:", color_index)
+            datasets.push({
+              label: "Dataset" + id.toString(),
+              data: state["server_data_" + id.toString()].data,
+              borderColor: default_colors[color_index],
+              backgroundColor: default_colors[color_index],
+            });
+          }
+        }
       });
-    }
-  }, [state.server_data_fetched]);
 
-  // useEffect(() => {
-  //   console.log("fetch status", state.fetch_status);
-  //   if (state.fetch_status != null) {
-  //     state.fetch_status.map((value) => {
-  //       if (value.needs_update == true) {
-  //         getResultData(value);
-  //       }
-  //     });
-  //   }
-  // }, [state.fetch_status]);
+      let [min_date, max_date] = getDatasetsMaxAndMinDate(datasets);
+
+      console.log("min date", min_date, "max date", max_date);
+
+      //add code here to define function to set null data to have the min date and max date
+      datasets = setMinAndMaxDateToDatasets(datasets, min_date, max_date);
+
+      const data = {
+        datasets: datasets,
+      };
+      console.log("data", data);
+
+      return data
+    }
+  }
 
   useEffect(() => {
-    //if a valid visual detail state is set
-    // set this in state
-    //state.fetch_status: [{
-    //  id: 1
-    //  data: [big mess of data]
-    //  is_loading: true
-    //  needs_update: true
-    // },
-    //{
-    //  id: 1
-    //  data: [big mess of data]
-    //  is_loading: true
-    //   needs_update: true
-    // }]
-    // then something watches this
-    // for each thing that needs an update it sets off an axios get
-    // and it sets need update to false
-    // and it sets is loading to true
-    // when data comes back it sets is loading to false
-    // and it sets the data to the data field
-
-    //if the fetch status has been set up and nothing is loading or needs an update
-    //then render a chart using the data in fetch status
-
     if (state.visualDetail) {
-      // let copy_fetch_status = Array();
-      // state.visualDetail.measurevisuals.map((mv) => {
-      //   if (mv.measure != null) {
-      //     copy_fetch_status.push({
-      //       id: mv.id,
-      //       data: null,
-      //       is_loading: true,
-      //       needs_update: true,
-      //     });
-      //   }
-      // });
-
-      // setState({ fetch_status: copy_fetch_status });
-
       state.visualDetail.measurevisuals.map((value) => {
         if (value.measure) {
           getResultData(value.id);
         }
       });
     }
-
-    const data1 = [
-      {
-        id: 556,
-        project: 32,
-        measure: 87,
-        measure_result: 100.0,
-        date: "2022-07-28",
-      },
-      {
-        id: 557,
-        project: 32,
-        measure: 87,
-        measure_result: 150.0,
-        date: "2022-07-29",
-      },
-    ];
-
-    const data2 = [
-      {
-        id: 556,
-        project: 32,
-        measure: 87,
-        measure_result: 200.0,
-        date: "2022-07-28",
-      },
-      {
-        id: 557,
-        project: 32,
-        measure: 87,
-        measure_result: 250.0,
-        date: "2022-07-29",
-      },
-    ];
-
-    const data = {
-      datasets: [
-        {
-          label: "Dataset 1",
-          data: data1,
-          borderColor: "rgb(255, 99, 132)",
-          backgroundColor: "rgba(255, 99, 132, 0.5)",
-        },
-        {
-          label: "Dataset 2",
-          data: data2,
-          borderColor: "rgb(53, 162, 235)",
-          backgroundColor: "rgba(53, 162, 235, 0.5)",
-        },
-      ],
-    };
-    // setState({ data: data });
   }, [state.visualDetail]);
 
   function renderChartJS() {
@@ -480,12 +426,26 @@ export default function MeasureVisuals({ visual_id = null }) {
       LinearScale,
       PointElement,
       LineElement,
+      TimeScale,
       Title,
       Tooltip,
       Legend
     );
 
     const options = {
+      scales: {
+        x: {
+          type: "time",
+          time: {
+        //    unit: "week",
+          },
+          adapters: {
+            date: {
+              locale: enUS ,
+            },
+          },
+        },
+      },
       responsive: true,
       parsing: {
         xAxisKey: "date",
@@ -502,11 +462,10 @@ export default function MeasureVisuals({ visual_id = null }) {
         },
       },
     };
-
-    if (state.data) {
-      return <Line options={options} data={state.data} />;
+    if (state.visualDetail) {
+      return <Line options={options} data={makeDatasetsFromServerData()} />;
     }
-  }
+    }
 
   return (
     <div>

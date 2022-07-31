@@ -35,7 +35,7 @@ class ResultsViewSet(viewsets.ReadOnlyModelViewSet):
             pass
         else:
             queryset = queryset.exclude(date__isnull=True)
-        return queryset
+        return queryset.order_by('date')
 
 
 class MeasureViewSet(ModelViewSet):
