@@ -11,8 +11,8 @@ from .models import Measure, MeasureTag, MeasureVisual, Parameter, Project, Proj
 # https://stackoverflow.com/questions/38319856/django-rest-framework-read-only-model-serializer
 class ResultsSerializer(serializers.ModelSerializer):
     class Meta:
-        model= Results
-        fields= ['id', 'project','measure','measure_result','date']
+        model = Results
+        fields = ['id', 'project', 'measure', 'measure_result', 'date']
 
 
 class ProjectTagListSerializer(serializers.ModelSerializer):
@@ -59,8 +59,19 @@ class ParameterSerializer(serializers.ModelSerializer):
 class MeasureVisualSerializer(serializers.ModelSerializer):
     class Meta:
         model = MeasureVisual
-        fields = ['id', 'project', 'measure', 'visual',
+        fields = ['id', 'project', 'project_title', 'measure', 'measure_title', 'visual',
                   'start_date', 'end_date', 'collect', 'style_color']
+
+    measure_title = serializers.SerializerMethodField(
+        method_name="get_measure_title", read_only=True)
+    project_title = serializers.SerializerMethodField(
+        method_name="get_project_title", read_only=True)
+
+    def get_measure_title(self, MeasureVisual: MeasureVisual):
+        return MeasureVisual.measure.title
+
+    def get_project_title(self, MeasureVisual: MeasureVisual):
+        return MeasureVisual.project.title
 
 
 class VisualSerializer(serializers.ModelSerializer):

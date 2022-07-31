@@ -57,7 +57,9 @@ export default function MeasureVisuals({ visual_id = null }) {
     response_data.measurevisuals.push({
       id: "new",
       project: null,
+      project_title:null,
       measure: null,
+      measure_title:null,
       visual: visual_id,
       start_date: null,
       end_date: null,
@@ -133,14 +135,20 @@ export default function MeasureVisuals({ visual_id = null }) {
       return true;
     } else if (key.toLowerCase() == "visual") {
       return true;
+    }else if (key.toLowerCase() == "measure_title") {
+      return true;
+    }else if (key.toLowerCase() == "project_title") {
+      return true;
     }
     return false;
   }
 
 
   //submit the form data to the server
-  function handleFormSubmit(event) {
+  function handleFormSubmit(event, measurevisual_id_to_delete = null) {
+    if(event != null){
     event.preventDefault();
+    }
     //update existing measurevisuals of current visual
     let copy_visualDetail = { ...state.visualDetail };
     let copy_measurevisuals = cloneDeep(state.visualDetail.measurevisuals);
@@ -162,6 +170,19 @@ export default function MeasureVisuals({ visual_id = null }) {
       copy_visualDetail.measurevisuals = copy_measurevisuals;
     }
 
+    //strip read only measure title and project title from data
+    copy_visualDetail.measurevisuals = copy_visualDetail.measurevisuals.map((measurevisual)=>{
+      delete measurevisual.measure_title
+      delete measurevisual.project_title
+      return measurevisual
+    })
+
+    if(measurevisual_id_to_delete !== null){
+      copy_visualDetail.measurevisuals = copy_visualDetail.measurevisuals.filter((measurevisual)=>{
+        return measurevisual.id != measurevisual_id_to_delete
+      })
+    }
+
     //any measure details with an existing id will be updated
     //any with no id given will be created
     //any that aren't part of the patch will be deleted
@@ -180,13 +201,16 @@ export default function MeasureVisuals({ visual_id = null }) {
   }
 
 
-
+function handleDeleteMeasureVisual(id){
+console.log("id", id)
+handleFormSubmit(null,id)
+}
 
   function renderMeasureVisualList() {
     if (state.visualDetail) {
       return (
         <div>
-          <Form onSubmit={handleFormSubmit}>
+          <Form onSubmit={(event)=>{handleFormSubmit(event,null)}}>
             <Accordion>
               <br />
               {state.visualDetail.measurevisuals.map((value) => {
@@ -200,10 +224,12 @@ export default function MeasureVisuals({ visual_id = null }) {
                         return renderInputForm(key, value);
                       })}
                       <RelationPickerModal
-                        insertCallBack={(project, measure) => {
-                          handleInsertCallBack(project, measure, value.id);
+                        insertCallBack={(project, project_title, measure, measure_title) => {
+                          handleInsertCallBack(project,project_title, measure, measure_title,value.id);
                         }}
-                      />
+                      /> 
+                      
+                       <Button variant="danger" onClick={()=>{handleDeleteMeasureVisual(value.id)}}>Delete Measure</Button>
                     </Accordion.Body>
                   </Accordion.Item>
                 );
@@ -220,14 +246,14 @@ export default function MeasureVisuals({ visual_id = null }) {
     //Make the accordion header label different if it's a new measurevisual
   function renderAccordionHeaderText(value) {
     if (value.project && value.measure) {
-      return value.project + ":" + value.measure;
+      return value.project_title + ":" + value.measure_title;
     } else if (value.id == "new") {
       return "*Add New Measurement*";
     }
   }
 
   //handle the return from the measure modal picker
-  function handleInsertCallBack(project, measure, id) {
+  function handleInsertCallBack(project, project_title, measure, measure_title, id) {
     let copy_visualDetail = { ...state.visualDetail };
     let copy_measurevisuals = cloneDeep(state.visualDetail.measurevisuals);
     let filtered_measurevisuals = copy_measurevisuals.filter((value) => {
@@ -235,7 +261,9 @@ export default function MeasureVisuals({ visual_id = null }) {
     });
     let copy_measurevisual_to_set = filtered_measurevisuals[0];
     copy_measurevisual_to_set.project = project;
+    copy_measurevisual_to_set.project_title = project_title;
     copy_measurevisual_to_set.measure = measure;
+    copy_measurevisual_to_set.measure_title = measure_title;
 
     copy_visualDetail.measurevisuals = copy_measurevisuals;
     setState({ visualDetail: copy_visualDetail });
@@ -385,7 +413,7 @@ function makeDatasetsFromServerData(){
             }
             console.log("color is:", color_index)
             datasets.push({
-              label: "Dataset" + id.toString(),
+              label: getParameterForId(id,'project_title')+ ':'+ getParameterForId(id,'measure_title'),
               data: state["server_data_" + id.toString()].data,
               borderColor: default_colors[color_index],
               backgroundColor: default_colors[color_index],

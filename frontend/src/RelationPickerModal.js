@@ -54,7 +54,7 @@ export default function RelationPickerModal({insertCallBack}) {
   };
 
   const handleRelationModalInsert = () => {
-    insertCallBack(state.selected_project_to_insert,state.selected_measure_to_insert);
+    insertCallBack(state.selected_project_to_insert,state.project_title_to_insert, state.selected_measure_to_insert,state.measure_title_to_insert);
     setShowRelationModal(false);
   };
   return (
