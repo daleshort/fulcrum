@@ -12,13 +12,101 @@ from .serializers import *
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import viewsets
+from rest_framework.views import APIView
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
+
+from django.db.models import Sum
 
 # Create your views here.
 
 
+
+class ConsolidateResults(APIView):
+
+    def get(self, request):
+        queryset = Results.objects.all()
+        if 'measure' in self.request.query_params:
+            measure = self.request.query_params['measure']
+            queryset = queryset.filter(measure=measure)
+        if 'start_date' in self.request.query_params:
+            start_date = self.request.query_params['start_date']
+            queryset = queryset.filter(date__gte=start_date)
+        if 'end_date' in self.request.query_params:
+            end_date = self.request.query_params['end_date']
+            queryset = queryset.filter(date__lte=end_date)
+        if 'nulldate' in self.request.query_params:
+            pass
+        else:
+            queryset = queryset.exclude(date__isnull=True)
+        queryset = queryset.order_by('date')
+
+        if 'collect' in self.request.query_params:
+            collect = self.request.query_params['collect']
+           # print("collect", collect)
+
+        results_list = []
+        # get the minimum date and get the max date
+        response_data = queryset.values()
+      #  print("response_data", response_data)
+        min_date = response_data[0]['date']
+
+        base_data = response_data[0]
+
+        max_date = response_data[response_data.count()-1]['date']
+        print("min date", min_date, "max date", max_date)
+        # find the last day of the month in the minimum date
+
+        def last_day_of_month(any_day):
+            # The day 28 exists in every month. 4 days later, it's always next month
+            next_month = any_day.replace(day=28) + relativedelta(days=4)
+            # subtracting the number of the current day brings us back one month
+            return next_month - relativedelta(days=next_month.day)
+
+        last_day = last_day_of_month(min_date)
+        print('last day', last_day)
+
+        # consolidate results from the minimum date to the last day of the month
+        copy_queryset = queryset
+        result = copy_queryset.filter(date__gte=min_date).filter(
+            date__lte=last_day).aggregate(Sum('measure_result'))['measure_result__sum']
+        #print("result", result)
+        # make a result for the last day of the month with the sum
+        base_data['measure_result'] = result
+        base_data['date'] = last_day
+        results_list.append(base_data)
+       # print('results list', results_list)
+
+        while last_day <= max_date:
+            # if the last day of the month isn't greater than the max date
+            # increment the month
+            print('last day', last_day)
+            last_day = last_day_of_month(last_day + relativedelta(days=1))
+            copy_queryset = queryset
+            result = copy_queryset.filter(date__gte=min_date).filter(
+                date__lte=last_day).aggregate(Sum('measure_result'))['measure_result__sum']
+           # print("result", result)
+            # make a result for the last day of the month with the sum
+            base_data['measure_result'] = result
+            base_data['date'] = last_day
+            results_list.append(base_data)
+           # print('results list', results_list)
+
+
+        return Response(results_list)
+        #return Response(queryset.values())
+
+
 class ResultsViewSet(viewsets.ReadOnlyModelViewSet):
 
-    serializer_class = ResultsSerializer
+    def get_serializer_class(self, *args, **kwargs):
+        if 'collect' in self.request.query_params:
+            pass
+        else:
+            return ResultsSerializer
 
     def get_queryset(self):
         queryset = Results.objects.all()
@@ -27,15 +115,18 @@ class ResultsViewSet(viewsets.ReadOnlyModelViewSet):
             queryset = queryset.filter(measure=measure)
         if 'start_date' in self.request.query_params:
             start_date = self.request.query_params['start_date']
-            queryset = queryset.filter(date__gt=start_date)
+            queryset = queryset.filter(date__gte=start_date)
         if 'end_date' in self.request.query_params:
             end_date = self.request.query_params['end_date']
-            queryset = queryset.filter(date__lt=end_date)
+            queryset = queryset.filter(date__lte=end_date)
         if 'nulldate' in self.request.query_params:
             pass
         else:
             queryset = queryset.exclude(date__isnull=True)
         return queryset.order_by('date')
+
+    def get_serializer_context(self):
+        return {"request_data": self.request.data, "query_params": self.request.query_params}
 
 
 class MeasureViewSet(ModelViewSet):

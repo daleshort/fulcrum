@@ -29,4 +29,4 @@ tags_router.register(
     'measures', views.MeasureViewSet, basename='measures'
 )
 # URL conf
-urlpatterns = router.urls + tags_router.urls + measures_router.urls
+urlpatterns = router.urls + tags_router.urls + measures_router.urls + [path('consolidate/', views.ConsolidateResults.as_view(), name='consolidate')]

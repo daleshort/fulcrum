@@ -5,14 +5,14 @@ from .models import Measure, MeasureTag, MeasureVisual, Parameter, Project, Proj
 
 # https://ilovedjango.com/django/rest-api-framework/tips/save-foreign-key-using-django-rest-framework-create-method/
 
-# serializer for all tags in all projects
-
 
 # https://stackoverflow.com/questions/38319856/django-rest-framework-read-only-model-serializer
 class ResultsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Results
         fields = ['id', 'project', 'measure', 'measure_result', 'date']
+
+
 
 
 class ProjectTagListSerializer(serializers.ModelSerializer):
@@ -86,7 +86,12 @@ class VisualSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
 
+        print("request data", self.context['request_data'])
+        
+
+
         if self.context['request_data'].get("measurevisuals"):
+            print("inside loop")
             measurevisual_data = self.context['request_data'].pop(
                 'measurevisuals')
 
@@ -130,6 +135,15 @@ class VisualSerializer(serializers.ModelSerializer):
             if len(measurevisual_dict) > 0:
                 for item in measurevisual_dict.values():
                     item.delete()
+
+        try:
+            if self.context['request_data']['measurevisuals'] == []:
+                measurevisual_dict = dict((i.id, i)
+                            for i in instance.measurevisuals.all())
+                for item in measurevisual_dict.values():
+                        item.delete()
+        except:
+            pass    
 
         if "measurevisuals" in validated_data:
             validated_data.pop("measurevisuals")

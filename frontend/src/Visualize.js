@@ -42,7 +42,7 @@ export default function Visualize() {
     if (state.activeVisual !== null) {
       if (state.activeVisual == "new") {
         setState({
-          visualDetail: { id: "new", title: "", type: "line" },
+          visualDetail: { id: "new", title: "", type: "line", measurevisuals:Array() },
         });
       } else {
         setState({ isLoadingVisualDetail: true });
@@ -243,7 +243,7 @@ export default function Visualize() {
               <option value={"line"}>Line Chart</option>
             </Form.Select>
             <br/>
-            <Button type="submit">Submit Visual</Button>
+            <Button type="submit">Update Visual</Button>
             <Button variant="danger" onClick={handleVisualModalShow}>
               Delete
             </Button>
