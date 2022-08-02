@@ -91,14 +91,16 @@ export default function MeasureManager() {
           <Form onSubmit={handleProjectFormSubmit}>
             <FloatingLabel
               controlId="floatingInput"
-              label="Title"
+              label="Project Title"
               className="mb-3"
+              placeholder="Project Title"
             >
               <Form.Control
                 name="title"
                 onChange={handleProjectFormChange}
                 onSelect={handleProjectFormChange}
-                value={state.projectDetail.title || ""}
+                placeholder="Project Title"
+                value={state.projectDetail.title?state.projectDetail.title:null}
               />
             </FloatingLabel>
 

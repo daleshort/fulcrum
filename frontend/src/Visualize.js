@@ -1,17 +1,5 @@
 import React, { useReducer, useEffect, useState } from "react";
 import axios from "axios";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-} from "chart.js";
-import { Line } from "react-chartjs-2";
-import { faker } from "@faker-js/faker";
 
 import ListGroup from "react-bootstrap/ListGroup";
 import Card from "react-bootstrap/Card";
@@ -21,7 +9,6 @@ import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
 import FloatingLabel from "react-bootstrap/esm/FloatingLabel";
 import Modal from "react-bootstrap/Modal";
-import MeasureDetail from "./MeasureDetail";
 import MeasureVisuals from "./MeasureVisuals";
 
 export default function Visualize() {
@@ -36,13 +23,16 @@ export default function Visualize() {
     }
   );
 
-  
-
   useEffect(() => {
     if (state.activeVisual !== null) {
       if (state.activeVisual == "new") {
         setState({
-          visualDetail: { id: "new", title: "", type: "line", measurevisuals:Array() },
+          visualDetail: {
+            id: "new",
+            title: "",
+            type: "line",
+            measurevisuals: Array(),
+          },
         });
       } else {
         setState({ isLoadingVisualDetail: true });
@@ -126,7 +116,7 @@ export default function Visualize() {
           "http://127.0.0.1:8000/project/visuals/" +
             state.activeVisual.toString() +
             "/",
-            copy_visualDetail
+          copy_visualDetail
         )
         .then((response) => {
           console.log(response.data);
@@ -229,20 +219,24 @@ export default function Visualize() {
             >
               <Form.Control
                 name="title"
+                placeholder="Title"
                 onChange={handleVisualFormChange}
                 onSelect={handleVisualFormChange}
-                value={state.visualDetail.title || ""}
+                value={state.visualDetail.title}
               />
             </FloatingLabel>
             <Form.Select
-              name={"Type"}
+              name={"type"}
               onChange={handleVisualFormChange}
               onSelect={handleVisualFormChange}
               value={state.visualDetail.type}
             >
               <option value={"line"}>Line Chart</option>
+              <option value={"bar"}>Bar Chart</option>
+              <option value={"doughnut_sum"}>Doughnut Chart (Sum)</option>
+              <option value={"doughnut_avg"}>Doughnut Chart (Average)</option>
             </Form.Select>
-            <br/>
+            <br />
             <Button type="submit">Update Visual</Button>
             <Button variant="danger" onClick={handleVisualModalShow}>
               Delete
@@ -254,10 +248,10 @@ export default function Visualize() {
     }
   }
 
-  function renderMeasureVisuals(){
-    console.log(state.visualDetail)
-    if (state.visualDetail !=null){
-      return <MeasureVisuals visual_id={state.activeVisual}/>
+  function renderMeasureVisuals() {
+    console.log(state.visualDetail);
+    if (state.visualDetail != null) {
+      return <MeasureVisuals visual_id={state.activeVisual} />;
     }
   }
 
@@ -300,7 +294,6 @@ export default function Visualize() {
       <br />
       {renderVisualForm()}
       {renderMeasureVisuals()}
-
     </div>
   );
 }

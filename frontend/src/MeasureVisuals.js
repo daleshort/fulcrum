@@ -4,6 +4,8 @@ import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
+  BarElement,
+  ArcElement,
   PointElement,
   LineElement,
   Title,
@@ -11,7 +13,7 @@ import {
   Legend,
   TimeScale,
 } from "chart.js";
-import { Line } from "react-chartjs-2";
+import { Line, Bar, Doughnut } from "react-chartjs-2";
 import { cloneDeep } from "lodash";
 
 import Accordion from "react-bootstrap/Accordion";
@@ -22,6 +24,8 @@ import RelationPickerModal from "./RelationPickerModal";
 
 import "chartjs-adapter-date-fns";
 import { enUS } from "date-fns/locale";
+
+let xlsx = require("json-as-xlsx");
 
 export default function MeasureVisuals({ visual_id = null }) {
   const [state, setState] = useReducer(
@@ -98,28 +102,43 @@ export default function MeasureVisuals({ visual_id = null }) {
   }, [visual_id]);
 
   function renderInputForm(key, value) {
-    return (
-      <FloatingLabel
-        controlId="floatingInput"
-        label={key}
-        className="mb-3"
-        key={key}
-      >
-        <Form.Control
-          name={key}
-          onChange={(event) => {
-            handleFormChange(event, value.id);
-          }}
-          onSelect={(event) => {
-            handleFormChange(event, value.id);
-          }}
-          value={value[key] == null ? "" : value[key]}
-          disabled={checkForDeactivated(key)}
-          type={key.toLowerCase().includes("date") ? "date" : ""}
-        />
-      </FloatingLabel>
-    );
-    // return (<ul>{ key + ":" + value[key]}</ul>);
+    if (key == "collect") {
+      return (<div><Form.Select
+      name={key}
+      onChange={(event) => {
+        handleFormChange(event, value.id);
+      }}
+      onSelect={(event) => {
+        handleFormChange(event, value.id);
+      }}
+      value={value[key]}
+    >
+      <option value={null}>Select</option>
+      <option value={"monthly"}>monthly</option>
+    </Form.Select><br/></div>)
+    } else {
+      return (
+        <FloatingLabel
+          controlId="floatingInput"
+          label={key}
+          className="mb-3"
+          key={key}
+        >
+          <Form.Control
+            name={key}
+            onChange={(event) => {
+              handleFormChange(event, value.id);
+            }}
+            onSelect={(event) => {
+              handleFormChange(event, value.id);
+            }}
+            value={value[key] == null ? "" : value[key]}
+            disabled={checkForDeactivated(key)}
+            type={key.toLowerCase().includes("date") ? "date" : ""}
+          />
+        </FloatingLabel>
+      );
+    }
   }
   function handleFormChange(event, measurevisual_id) {
     console.log("state of visual detail at change:", state.visualDetail);
@@ -325,7 +344,14 @@ export default function MeasureVisuals({ visual_id = null }) {
   }
 
   function getResultData(id_to_get) {
-    let base_url = "http://127.0.0.1:8000/project/results/";
+    let base_url = "";
+
+    if (getParameterForId(id_to_get, "collect") == "monthly") {
+      base_url = "http://127.0.0.1:8000/project/consolidate/";
+    } else {
+      base_url = "http://127.0.0.1:8000/project/results/";
+    }
+
     const measure = getParameterForId(id_to_get, "measure");
     base_url = base_url + "?measure=" + measure + "&nulldate=true";
 
@@ -502,10 +528,10 @@ export default function MeasureVisuals({ visual_id = null }) {
               data: data_from_state,
               borderColor: default_colors[color_index],
               backgroundColor: default_colors[color_index],
-              sum: data_sum,
-              avg: data_average,
-              max: data_max,
-              min: data_min,
+              sum: parseFloat(data_sum).toFixed(2),
+              avg: parseFloat(data_average).toFixed(2),
+              max: parseFloat(data_max).toFixed(2),
+              min: parseFloat(data_min).toFixed(2),
             });
           }
         }
@@ -539,7 +565,9 @@ export default function MeasureVisuals({ visual_id = null }) {
     ChartJS.register(
       CategoryScale,
       LinearScale,
+      BarElement,
       PointElement,
+      ArcElement,
       LineElement,
       TimeScale,
       Title,
@@ -547,12 +575,45 @@ export default function MeasureVisuals({ visual_id = null }) {
       Legend
     );
 
-    const options = {
+    const options_bar = {
+     // skipNull:true,  // I think if I padded the data with null values I could get the axis to skip these?
+      responsive: true,
+      // scales: {
+      //   x: {
+      //     type: "time",
+      //     // offsetAfterAutoskip: true,
+      //     time: {
+      //       //  unit: "month",
+      //     },
+      //     adapters: {
+      //       date: {
+      //         locale: enUS,
+      //       },
+      //     },
+      //   },
+      // },
+      parsing: {
+        xAxisKey: "date",
+        yAxisKey: "measure_result",
+      },
+      plugins: {
+        legend: {
+          position: "top",
+          // position: 'top' as const,
+        },
+        title: {
+          display: true,
+          text: "Bar Chart",
+        },
+      },
+    };
+
+    const options_line = {
       scales: {
         x: {
           type: "time",
           time: {
-            //        unit: "week",
+            //  unit: "month",
           },
           adapters: {
             date: {
@@ -573,25 +634,111 @@ export default function MeasureVisuals({ visual_id = null }) {
         },
         title: {
           display: true,
-          text: "Chart.js Line Chart",
+          text: "Line Chart",
         },
       },
     };
 
     if (state.visualDetail_for_chart) {
       let data_for_chart = makeDatasetsFromServerData();
-
+      console.log("state of visual detail", state.visualDetail);
       if (data_for_chart.datasets.length > 0) {
+        const chart = () => {
+          if (state.visualDetail.type == "line") {
+            return <Line options={options_line} data={data_for_chart} />;
+          } else if (state.visualDetail.type == "bar") {
+            return <Bar options={options_bar} data={data_for_chart} />;
+          } else if (state.visualDetail.type == "doughnut_sum") {
+            return (
+              <Doughnut
+                options={options_bar}
+                data={makeSummaryDataset(data_for_chart, "sum")}
+              />
+            );
+          } else if (state.visualDetail.type == "doughnut_avg") {
+            return (
+              <Doughnut
+                options={options_bar}
+                data={makeSummaryDataset(data_for_chart, "avg")}
+              />
+            );
+          }
+        };
+
         return (
           <div>
-            <Line options={options} data={data_for_chart} />
+            {chart()}
             {data_for_chart.datasets.map((dataset) => {
-              return <div>{dataset.label} | avg: {dataset.avg} | sum: {dataset.sum} | max: {dataset.max} | min: {dataset.min}</div>;
+              return (
+                <div>
+                  {dataset.label} | avg: {dataset.avg} | sum: {dataset.sum} |
+                  max: {dataset.max} | min: {dataset.min}
+                </div>
+              );
             })}
+            <Button
+              onClick={() => {
+                let data_prepared = prepareDataToXlsx(data_for_chart);
+                let settings = {
+                  fileName: "MySpreadsheet", // Name of the resulting spreadsheet
+                  extraLength: 3, // A bigger number means that columns will be wider
+                  writeOptions: {}, // Style options from https://github.com/SheetJS/sheetjs#writing-options
+                };
+
+                xlsx(data_prepared, settings);
+              }}
+            >
+              Download XLSX
+            </Button>
           </div>
         );
       }
     }
+  }
+
+  function prepareDataToXlsx(data_for_chart) {
+    return data_for_chart.datasets.map((dataset, index) => {
+      return {
+        sheet: dataset.label.slice(0, 28) + "-" + index.toString(),
+        columns: [
+          { label: "Date", value: "date" },
+          { label: "Result", value: "measure_result" },
+          { label: "Project:Measure", value: "label" },
+        ],
+        content: dataset.data.map((value) => {
+          value["label"] = dataset.label;
+          return value;
+        }),
+      };
+    });
+  }
+
+  function makeSummaryDataset(data_for_chart, type) {
+    return {
+      datasets: [
+        {
+          data: data_for_chart.datasets.map((dataset) => {
+            if (type == "sum") {
+              return dataset.sum;
+            } else return dataset.avg;
+          }),
+          borderColor: data_for_chart.datasets.map((dataset) => {
+            return dataset.backgroundColor;
+          }),
+          backgroundColor: data_for_chart.datasets.map((dataset) => {
+            return dataset.backgroundColor
+              .replace(")", ", 0.75)")
+              .replace("rgb", "rgba");
+          }),
+          borderWidth: 2,
+        },
+      ],
+
+      // These labels appear in the legend and in the tooltips when hovering different arcs
+      labels: data_for_chart.datasets.map((dataset) => {
+        return dataset.label;
+      }),
+    };
   }
 
   return (

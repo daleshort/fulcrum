@@ -30,9 +30,9 @@ export default function RelationPickerModal({insertCallBack}) {
     (state, newState) => ({ ...state, ...newState }),
     {
       selected_project_to_insert: null,
-      project_title_to_insert: null,  //not used
+      project_title_to_insert: null,  
       selected_measure_to_insert: null,
-      measure_title_to_insert: null, //not used
+      measure_title_to_insert: null, 
       relation_modal_target: null,
     }
   );

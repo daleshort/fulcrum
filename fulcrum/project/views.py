@@ -67,32 +67,34 @@ class ConsolidateResults(APIView):
             return next_month - relativedelta(days=next_month.day)
 
         last_day = last_day_of_month(min_date)
+        first_day = min_date
         print('last day', last_day)
 
         # consolidate results from the minimum date to the last day of the month
         copy_queryset = queryset
-        result = copy_queryset.filter(date__gte=min_date).filter(
+        result = copy_queryset.filter(date__gte=first_day).filter(
             date__lte=last_day).aggregate(Sum('measure_result'))['measure_result__sum']
         #print("result", result)
         # make a result for the last day of the month with the sum
         base_data['measure_result'] = result
         base_data['date'] = last_day
-        results_list.append(base_data)
+        results_list.append(base_data.copy())
        # print('results list', results_list)
 
         while last_day <= max_date:
             # if the last day of the month isn't greater than the max date
             # increment the month
             print('last day', last_day)
-            last_day = last_day_of_month(last_day + relativedelta(days=1))
+            first_day = last_day+ relativedelta(days=1)
+            last_day = last_day_of_month(first_day)
             copy_queryset = queryset
-            result = copy_queryset.filter(date__gte=min_date).filter(
+            result = copy_queryset.filter(date__gte=first_day).filter(
                 date__lte=last_day).aggregate(Sum('measure_result'))['measure_result__sum']
            # print("result", result)
             # make a result for the last day of the month with the sum
             base_data['measure_result'] = result
             base_data['date'] = last_day
-            results_list.append(base_data)
+            results_list.append(base_data.copy())
            # print('results list', results_list)
 
 

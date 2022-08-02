@@ -73,8 +73,8 @@ export default function Measures({ activeProjectProp = null }) {
   function renderAddNewMeasure() {
     const new_measure = {
       id: "new",
-      title: "New Measure",
-      units: "test",
+      title: null,
+      units: null,
       type: "test123",
       parameters: [],
     };

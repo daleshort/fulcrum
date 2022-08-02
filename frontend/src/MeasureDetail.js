@@ -12,6 +12,8 @@ import Form from "react-bootstrap/Form";
 import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
+import Dropdown from "react-bootstrap/Dropdown";
+import DropdownButton from "react-bootstrap/DropdownButton";
 
 import FloatingLabel from "react-bootstrap/esm/FloatingLabel";
 import Modal from "react-bootstrap/Modal";
@@ -21,6 +23,7 @@ import InputGroup from "react-bootstrap/InputGroup";
 import Accordion from "react-bootstrap/Accordion";
 import ProjectList from "./ProjectList";
 import MeasureList from "./MeasureList";
+import DistributionModal from "./DistributionModal";
 
 export default function MeasureDetail({
   measure,
@@ -34,10 +37,12 @@ export default function MeasureDetail({
       isLoading: false,
       parameters_need_intializing: false,
       selected_project_to_insert: null,
-      project_title_to_insert:null, 
+      project_title_to_insert: null,
       selected_measure_to_insert: null,
-      measure_title_to_insert:null,
+      measure_title_to_insert: null,
       relation_modal_target: null,
+      offset_type: "lag",
+      offset_days: null,
     }
   );
 
@@ -202,6 +207,28 @@ export default function MeasureDetail({
             parameter_char: "",
             parameter_title: "Expression",
           });
+          break;
+        case "distributed":
+          copy_measure_parameters.push({
+            id: 1, //ids are required for form input management but this will be blown away by the database on submit
+            parameter_float: 0,
+            parameter_title: "Value",
+          });
+          copy_measure_parameters.push({
+            id: 2,
+            parameter_char: "",
+            parameter_title: "Distribution",
+          });
+          copy_measure_parameters.push({
+            id: 3,
+            parameter_date: "0000-00-00",
+            parameter_title: "Start Date",
+          });
+          copy_measure_parameters.push({
+            id: 4,
+            parameter_date: "0000-00-00",
+            parameter_title: "End Date",
+          });
         default:
           break;
       }
@@ -277,13 +304,19 @@ export default function MeasureDetail({
     }
   }
 
-  const handleSelectedProjectToInsert = (project_id,project_title) => {
-    setState({ selected_project_to_insert: project_id, project_title_to_insert:project_title });
+  const handleSelectedProjectToInsert = (project_id, project_title) => {
+    setState({
+      selected_project_to_insert: project_id,
+      project_title_to_insert: project_title,
+    });
     console.log("project to insert", project_id);
   };
 
   const handleSelectedMeasureToInsert = (measure_id, measure_title) => {
-    setState({ selected_measure_to_insert: measure_id,measure_title_to_insert:measure_title });
+    setState({
+      selected_measure_to_insert: measure_id,
+      measure_title_to_insert: measure_title,
+    });
     console.log("measure to insert", measure_id);
   };
 
@@ -303,9 +336,20 @@ export default function MeasureDetail({
     let copy_measure_parameters = cloneDeep(state.measure.parameters);
     let copy_measure = { ...state.measure };
     console.log("target is", state.relation_modal_target);
+    console.log("offset days:", state.offset_days);
+    console.log("offset type:", state.offset_type);
     let parameter_to_modify = copy_measure_parameters.find((value) => {
       return value.parameter_title.toLowerCase().includes("expression");
     });
+
+    let offset_string = "l+0";
+    if (state.offset_days) {
+      if (state.offset_type == "lead") {
+        offset_string = "l+" + state.offset_days.toString();
+      } else if (state.offset_type == "lag") {
+        offset_string = "l-" + state.offset_days.toString();
+      }
+    }
 
     parameter_to_modify.parameter_char =
       parameter_to_modify.parameter_char.concat(
@@ -313,7 +357,13 @@ export default function MeasureDetail({
           state.selected_project_to_insert +
           "m" +
           state.selected_measure_to_insert +
-          "}"+"["+state.project_title_to_insert+":"+state.measure_title_to_insert+"]"
+          offset_string +
+          "}" +
+          "[" +
+          state.project_title_to_insert +
+          ":" +
+          state.measure_title_to_insert +
+          "]"
       );
 
     copy_measure.parameters = copy_measure_parameters;
@@ -352,6 +402,29 @@ export default function MeasureDetail({
                 </Col>
               </Row>
             </Container>
+            <br />
+            <InputGroup className="mb-3">
+              <Form.Select
+                value={state.offset_type ? state.offset_type : null}
+                onSelect={(event) => {
+                  setState({ offset_type: event.target.value });
+                }}
+                onChange={(event) => {
+                  setState({ offset_type: event.target.value });
+                }}
+              >
+                <option value="lag">Lag By</option>
+                <option value="lead">Lead By</option>
+              </Form.Select>
+              <Form.Control
+                placeholder="Days"
+                value={state.offset_days ? state.offset_days : null}
+                onChange={(event) => {
+                  setState({ offset_days: event.target.value });
+                }}
+              />
+              <InputGroup.Text id="basic-addon2">Days</InputGroup.Text>
+            </InputGroup>
           </Modal.Body>
           <Modal.Footer>
             <Button variant="secondary" onClick={handleRelationModalClose}>
@@ -409,6 +482,21 @@ export default function MeasureDetail({
     );
   }
 
+  function getParameter(name_str) {
+    console.log("parameters", state.measure.parameters);
+    let param_index = state.measure.parameters.findIndex((value, index) => {
+      return value.parameter_title
+        .toLowerCase()
+        .includes(name_str.toLowerCase());
+    });
+
+    if (param_index > -1) {
+      return state.measure.parameters[param_index];
+    } else {
+      return null;
+    }
+  }
+
   function renderParameters() {
     if (state.measure) {
       if (typeof state.measure.parameters !== "undefined") {
@@ -421,32 +509,79 @@ export default function MeasureDetail({
             return renderParmeterFormInput(x);
           });
         } else if (state.measure.type == "repeated") {
+          //find the location of the repeat frequency parameter
           let repeat_frequency_param_index = state.measure.parameters.findIndex(
             (value, index) => {
               return value.parameter_title.toLowerCase().includes("repeat");
             }
           );
+          //if it is found
           if (repeat_frequency_param_index > -1) {
+            //put the value aside
             let repeat_frequency_param =
               state.measure.parameters[repeat_frequency_param_index];
-
+            //make a copy of the parameters and slice out the repeat frequency parameter
             let other_params = state.measure.parameters.concat();
             other_params.splice(repeat_frequency_param_index, 1);
-
+            //Make a special dropdown menu for the repeat frequency
             let repeat_elements = [renderRepeatSelect(repeat_frequency_param)];
+            //autogenerate the fields for the other parameters
             let other_params_elements = other_params.map((x, i) => {
               return renderParmeterFormInput(x);
             });
             return repeat_elements.concat(other_params_elements);
           }
+        } else if (state.measure.type == "distributed") {
+          return state.measure.parameters
+            .map((x, i) => {
+              return [renderParmeterFormInput(x)];
+            })
+            .concat([renderDistributionModal()]);
         } else if (state.measure.type == "related_expression") {
-
+          //note the below expression only maps over one value
           return state.measure.parameters.map((x, i) => {
             return [renderParmeterFormInput(x)].concat([renderRelationModal()]);
           });
         }
       }
     }
+  }
+
+  function handleDistributionModalInsert(value) {
+    console.log("distribution value", value.toString());
+    let copy_measure_parameters = cloneDeep(state.measure.parameters);
+    let copy_measure = { ...state.measure };
+    console.log("target is", state.relation_modal_target);
+    let parameter_to_modify = copy_measure_parameters.find((value) => {
+      return value.parameter_title.toLowerCase().includes("distribution");
+    });
+    //maybe make this a json field one day but...meh...
+    parameter_to_modify.parameter_char = value.toString();
+
+    copy_measure.parameters = copy_measure_parameters;
+    setState({
+      measure: copy_measure,
+    });
+  }
+
+  function renderDistributionModal() {
+    let start_date = getParameter("start date").parameter_date;
+    let end_date = getParameter("end date").parameter_date;
+
+    let parameter_to_modify = state.measure.parameters.find((value) => {
+      return value.parameter_title.toLowerCase().includes("distribution");
+    });
+    //maybe make this a json field one day but...meh...
+    let distribution_state = parameter_to_modify.parameter_char;
+
+    return (
+      <DistributionModal
+        start_date={start_date}
+        end_date={end_date}
+        distribution_state={distribution_state}
+        insertCallBack={handleDistributionModalInsert}
+      />
+    );
   }
 
   function renderFormSelectType() {
@@ -466,6 +601,7 @@ export default function MeasureDetail({
                 Fixed value at a date
               </option>
               <option value={"repeated"}>Repeated Measure</option>
+              <option value={"distributed"}>Distributed Measure</option>
               <option value={"related_expression"}>Related Expression</option>
             </Form.Select>
             <br />
@@ -514,17 +650,19 @@ export default function MeasureDetail({
         <FloatingLabel controlId="floatingInput" label="Title" className="mb-3">
           <Form.Control
             name="title"
+            placeholder="New Measure"
             onChange={handleFormChange}
             onSelect={handleFormChange}
-            value={state.measure ? state.measure.title : ""}
+            value={state.measure ? state.measure.title : null}
           />
         </FloatingLabel>
         <FloatingLabel controlId="floatingInput" label="Units" className="mb-3">
           <Form.Control
             name="units"
+            placeholder="Units"
             onChange={handleFormChange}
             onSelect={handleFormChange}
-            value={state.measure ? state.measure.units : ""}
+            value={state.measure ? state.measure.units : null}
           />
         </FloatingLabel>
 
