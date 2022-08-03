@@ -74,6 +74,8 @@ export default function MeasureDetail({
     copy_measure.parameters = copy_measure_parameters;
 
     if (event.target.name == "type" && state.measure.id == "new") {
+
+      copy_measure = addNewParameters(copy_measure)
       setState({ measure: copy_measure, parameters_need_intializing: true });
       handleClickToggle("0");
     } else {
@@ -154,12 +156,9 @@ export default function MeasureDetail({
     }
   };
 
-  useEffect(() => {
-    if (state.parameters_need_intializing == true) {
-      let copy_measure_parameters = [];
-      let copy_measure = { ...state.measure };
-
-      switch (state.measure.type) {
+function addNewParameters(copy_measure){
+    let copy_measure_parameters = copy_measure.parameters
+      switch (copy_measure.type) {
         case "fixed_value_at_date":
           copy_measure_parameters.push({
             id: 1, //ids are required for form input management but this will be blown away by the database on submit
@@ -229,13 +228,13 @@ export default function MeasureDetail({
             parameter_date: "0000-00-00",
             parameter_title: "End Date",
           });
+          break;
         default:
           break;
       }
       copy_measure.parameters = copy_measure_parameters;
-      setState({ measure: copy_measure, parameters_need_intializing: false });
+      return copy_measure
     }
-  }, [state.parameters_need_intializing]);
 
   const [showModal, setShowModal] = useState(false);
   const handleModalClose = () => setShowModal(false);
@@ -483,7 +482,8 @@ export default function MeasureDetail({
   }
 
   function getParameter(name_str) {
-    console.log("parameters", state.measure.parameters);
+  console.log("measure state", state.measure)
+   console.log("parameters", state.measure.parameters);
     let param_index = state.measure.parameters.findIndex((value, index) => {
       return value.parameter_title
         .toLowerCase()
@@ -565,14 +565,17 @@ export default function MeasureDetail({
   }
 
   function renderDistributionModal() {
+    if(state.measure.parameters){
+      console.log('going to get dates')
     let start_date = getParameter("start date").parameter_date;
     let end_date = getParameter("end date").parameter_date;
 
-    let parameter_to_modify = state.measure.parameters.find((value) => {
-      return value.parameter_title.toLowerCase().includes("distribution");
-    });
-    //maybe make this a json field one day but...meh...
-    let distribution_state = parameter_to_modify.parameter_char;
+    let distribution_state = getParameter("distribution").parameter_char
+    // let parameter_to_modify = state.measure.parameters.find((value) => {
+    //   return value.parameter_title.toLowerCase().includes("distribution");
+    // });
+    // //maybe make this a json field one day but...meh...
+    // let distribution_state = parameter_to_modify.parameter_char;
 
     return (
       <DistributionModal
@@ -582,6 +585,7 @@ export default function MeasureDetail({
         insertCallBack={handleDistributionModalInsert}
       />
     );
+    }
   }
 
   function renderFormSelectType() {
@@ -643,7 +647,7 @@ export default function MeasureDetail({
       }, 400);
     }
   };
-
+  if(state.measure){
   return (
     <div>
       <Form onSubmit={handleFormSubmit}>
@@ -689,4 +693,5 @@ export default function MeasureDetail({
       {renderDeleteModal()}
     </div>
   );
+  }
 }

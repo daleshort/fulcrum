@@ -117,11 +117,11 @@ def processFixedValueAtDate(measure):
 
 
 def processRelatedExpression(measure):
-    # move this down?
+    #clear out the old results
     Results.objects.filter(measure=measure.id).delete()
 
     list_of_measure_ids = get_children_by_measure(measure)
-    print(list_of_measure_ids)
+    print("children measures", list_of_measure_ids)
 
     child_update_results = []
     for child in list_of_measure_ids:
@@ -139,36 +139,97 @@ def stripExpressionOfHumanReadable(expression: str) -> str:
         expression = expression.replace(m[0], '')
     return expression
 
+def getListOfDateOffsets(parameter_expression):
+    my_regex = '\{[^}]*\}'
+    matches = re.finditer(my_regex, parameter_expression)
+    list_of_dates = []
+    for m in matches:
+        string_expression = m[0]
+        
+        measure_string = re.search(
+            'm[0-9]+', string_expression)[0]
+        string_expression=string_expression.replace(measure_string,'')
+
+        project_string = re.search(
+            'p[0-9]+', string_expression)[0]
+        string_expression=string_expression.replace(project_string,'')
+        print('string expression', string_expression)
+        if('+' in string_expression):
+            offset_type = 'lead'
+            offset_amount = re.search(
+            'l\+[0-9]+', string_expression)[0].replace('l', '')
+            delta = relativedelta(days=float(offset_amount))
+        elif('-' in string_expression):
+            offset_type = 'lag'
+            offset_amount = re.search(
+                'l\-[0-9]+', string_expression)[0].replace('l', '')
+            delta = relativedelta(days=float(offset_amount))
+        else:
+            delta = relativedelta(days=0)
+        list_of_dates.append(delta)
+
+    return list_of_dates
+
 
 def executeDependentUpdate(measure, list_of_measure_ids) -> bool:
     # make a list of all dates related to measure
+    
+    parameter_expression = measure.parameters.get(
+        parameter_title="Expression").parameter_char
+    parameter_expression = stripExpressionOfHumanReadable(parameter_expression)
+    offset_list = getListOfDateOffsets(parameter_expression)
+
     list_of_dates = []
-    for id in list_of_measure_ids:
+    for index,id in enumerate(list_of_measure_ids):
 
         values_list_of_dict = Results.objects.filter(
             measure=id).values("date")
-        values_unpacked_list = [x['date'] for x in values_list_of_dict]
+        values_unpacked_list = [x['date']-offset_list[index] for x in values_list_of_dict]
         list_of_dates = list_of_dates + values_unpacked_list
     # Make list of dates only unique
     list_of_dates = (list(set(list_of_dates)))
 
     print(list_of_dates)
 
-    parameter_expression = measure.parameters.get(
-        parameter_title="Expression").parameter_char
-    parameter_expression = stripExpressionOfHumanReadable(parameter_expression)
 
-    my_regex = '\{p[0-9]+m[0-9]+\}'
+    my_regex = '\{[^}]*\}'
     for d in list_of_dates:
         working_parameter_expression = str(parameter_expression)
         matches = re.finditer(my_regex, working_parameter_expression)
 
         for m in matches:
+            string_expression = m[0]
             child_measure_id = re.search(
-                'm[0-9]+', m[0])[0].replace('m', '')
+                'm[0-9]+', string_expression)[0].replace('m', '')
+            
+            measure_string = re.search(
+                'm[0-9]+', string_expression)[0]
+            string_expression=string_expression.replace(measure_string,'')
+
+            project_string = re.search(
+                'p[0-9]+', string_expression)[0]
+            
+            string_expression=string_expression.replace(project_string,'')
+            print('string expression', string_expression)
+            if('+' in string_expression):
+                offset_type = 'lead'
+                offset_amount = re.search(
+                'l\+[0-9]+', string_expression)[0].replace('l', '')
+                delta = relativedelta(days=float(offset_amount))
+            elif('-' in string_expression):
+                offset_type = 'lag'
+                offset_amount = re.search(
+                    'l\-[0-9]+', string_expression)[0].replace('l', '')
+                delta = relativedelta(days=float(offset_amount))
+            else:
+                delta = relativedelta(days=0)
+
+            print('offset amount', offset_amount)
+
             measure_value = getMeasureResultForDateOrAssume(
-                child_measure_id, d)
+                child_measure_id, d+delta)
             print("measure value:", measure_value)
+
             working_parameter_expression = working_parameter_expression.replace(
                 m[0], str(measure_value))
         print(working_parameter_expression)
@@ -196,7 +257,7 @@ def getMeasureResultForDateOrAssume(measure_id: int, date: datetime) -> float:
 
 
 def parseMeasuresFromExpression(expression: str) -> list[int]:
-    my_regex = '\{p[0-9]+m[0-9]+\}'
+    my_regex = '\{[^}]*\}'
     matches = re.finditer(my_regex, expression)
     list_of_measure_ids = []
     for m in matches:
