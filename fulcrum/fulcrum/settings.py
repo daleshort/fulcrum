@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 
 from pathlib import Path
+from .config import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,7 +21,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-53hyyp9(!%up3!2g(@(t##op6c_#lx1ji^d!+8^e@x)fl3%y^2'
+SECRET_KEY = config.secret_key
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -80,10 +81,10 @@ WSGI_APPLICATION = 'fulcrum.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'fulcrum',
-        'HOST': 'localhost',
-        'USER': 'root',
-        'PASSWORD': 'kittens123'
+
+        'OPTIONS': {
+            'read_default_file': './fulcrum/my.cnf',
+        },
     }
 }
 
