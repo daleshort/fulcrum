@@ -7,6 +7,7 @@ import Container from "react-bootstrap/esm/Container";
 import Nav from "react-bootstrap/Nav";
 import Visualize from "./Visualize";
 
+
 export default function AppView() {
   const [state, setState] = useReducer(
     (state, newState) => ({ ...state, ...newState }),

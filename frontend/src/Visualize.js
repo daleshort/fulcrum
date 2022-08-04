@@ -10,6 +10,8 @@ import Form from "react-bootstrap/Form";
 import FloatingLabel from "react-bootstrap/esm/FloatingLabel";
 import Modal from "react-bootstrap/Modal";
 import MeasureVisuals from "./MeasureVisuals";
+import Offcanvas from "react-bootstrap/Offcanvas";
+import { PencilFill, FileBarGraph } from "react-bootstrap-icons";
 
 export default function Visualize() {
   const [state, setState] = useReducer(
@@ -257,7 +259,7 @@ export default function Visualize() {
 
   function renderVisualList() {
     return (
-      <Card style={{ width: "18rem" }}>
+
         <ListGroup>
           {state.visuals
             ? state.visuals.map((x, i) => {
@@ -284,16 +286,71 @@ export default function Visualize() {
             *start a new visual*
           </ListGroupItem>
         </ListGroup>
-      </Card>
+
     );
+  }
+
+  const [showOffCanvas, setShowOffCanvas] = useState(false);
+
+  const handleCloseOffCanvas = () => setShowOffCanvas(false);
+  const handleShowOffCanvas = () => setShowOffCanvas(true);
+
+  function getVisualTitle(){
+    if(state.visualDetail){
+      if(state.visualDetail.title==''){
+        return "Click Me To Add a Visual!"
+      }else{
+        return state.visualDetail.title
+      }
+
+    }
   }
   return (
     <div>
-      <br />
-      {renderVisualList()}
-      <br />
-      {renderVisualForm()}
-      {renderMeasureVisuals()}
+      <Offcanvas
+        show={showOffCanvas}
+        onHide={handleCloseOffCanvas}
+        key={10}
+        placement={"end"}
+      >
+        <Offcanvas.Header closeButton>Edit Visuals</Offcanvas.Header>
+        <Offcanvas.Body>
+          {renderVisualList()}
+          <br />
+          {renderVisualForm()}
+        </Offcanvas.Body>
+      </Offcanvas>
+      <div className="flex-container">
+        <div className="flex-title">
+          <div className="title-bar">
+            <div></div>
+            <div>
+              <FileBarGraph  color="white" size={20}/>
+              <Button
+                // as={ButtonGroup}
+                key={`dropdown-button-drop-start`}
+                id={`dropdown-button-drop-start`}
+                drop={"start"}
+                title={`Project Title`}
+                variant="primary"
+                onClick={handleShowOffCanvas}
+                size="lg"
+              >
+                {getVisualTitle()}
+              </Button>
+            </div>
+            <div className="pencil-icon" onClick={handleShowOffCanvas}>
+              <PencilFill color="white" size={20} />
+            </div>
+          </div>
+        </div>
+        <div className="flex-item">
+        {renderMeasureVisuals()}
+        </div>
+        <div className="bottom-padding"/>
+      </div>
+
+
     </div>
   );
 }

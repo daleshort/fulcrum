@@ -117,27 +117,30 @@ export default function MeasureVisuals({ visual_id = null }) {
       <option value={"monthly"}>monthly</option>
     </Form.Select><br/></div>)
     } else {
-      return (
-        <FloatingLabel
-          controlId="floatingInput"
-          label={key}
-          className="mb-3"
-          key={key}
-        >
-          <Form.Control
-            name={key}
-            onChange={(event) => {
-              handleFormChange(event, value.id);
-            }}
-            onSelect={(event) => {
-              handleFormChange(event, value.id);
-            }}
-            value={value[key] == null ? "" : value[key]}
-            disabled={checkForDeactivated(key)}
-            type={key.toLowerCase().includes("date") ? "date" : ""}
-          />
-        </FloatingLabel>
-      );
+      if(!checkForDeactivated(key)){
+        return (
+          <FloatingLabel
+            controlId="floatingInput"
+            label={key}
+            className="mb-3"
+            key={key}
+          >
+            <Form.Control
+              name={key}
+              onChange={(event) => {
+                handleFormChange(event, value.id);
+              }}
+              onSelect={(event) => {
+                handleFormChange(event, value.id);
+              }}
+              value={value[key] == null ? "" : value[key]}
+              disabled={checkForDeactivated(key)}
+              type={key.toLowerCase().includes("date") ? "date" : ""}
+            />
+          </FloatingLabel>
+        );
+      }
+
     }
   }
   function handleFormChange(event, measurevisual_id) {
@@ -181,6 +184,8 @@ export default function MeasureVisuals({ visual_id = null }) {
     } else if (key.toLowerCase() == "measure_title") {
       return true;
     } else if (key.toLowerCase() == "project_title") {
+      return true;
+    } else if (key.toLowerCase()=="style_color"){
       return true;
     }
     return false;
@@ -289,7 +294,7 @@ export default function MeasureVisuals({ visual_id = null }) {
                           );
                         }}
                       />
-
+                        {" "}
                       <Button
                         variant="danger"
                         onClick={() => {
@@ -668,6 +673,7 @@ export default function MeasureVisuals({ visual_id = null }) {
         return (
           <div>
             {chart()}
+            <br/>
             {data_for_chart.datasets.map((dataset) => {
               return (
                 <div>
@@ -743,8 +749,9 @@ export default function MeasureVisuals({ visual_id = null }) {
 
   return (
     <div>
-      {renderMeasureVisualList()}
       {renderChartJS()}
+      {renderMeasureVisualList()}
+      
     </div>
   );
 }

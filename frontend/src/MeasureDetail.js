@@ -74,8 +74,7 @@ export default function MeasureDetail({
     copy_measure.parameters = copy_measure_parameters;
 
     if (event.target.name == "type" && state.measure.id == "new") {
-
-      copy_measure = addNewParameters(copy_measure)
+      copy_measure = addNewParameters(copy_measure);
       setState({ measure: copy_measure, parameters_need_intializing: true });
       handleClickToggle("0");
     } else {
@@ -156,85 +155,85 @@ export default function MeasureDetail({
     }
   };
 
-function addNewParameters(copy_measure){
-    let copy_measure_parameters = copy_measure.parameters
-      switch (copy_measure.type) {
-        case "fixed_value_at_date":
-          copy_measure_parameters.push({
-            id: 1, //ids are required for form input management but this will be blown away by the database on submit
-            parameter_float: 0,
-            parameter_title: "Value",
-          });
-          copy_measure_parameters.push({
-            id: 2,
-            parameter_date: "0000-00-00",
-            parameter_title: "Date",
-          });
-          break;
-        case "fixed_value":
-          copy_measure_parameters.push({
-            id: 1, //ids are required for form input management but this will be blown away by the database on submit
-            parameter_float: 0,
-            parameter_title: "Value",
-          });
-          break;
-        case "repeated":
-          copy_measure_parameters.push({
-            id: 1, //ids are required for form input management but this will be blown away by the database on submit
-            parameter_float: 0,
-            parameter_title: "Value",
-          });
-          copy_measure_parameters.push({
-            id: 2,
-            parameter_char: "daily",
-            parameter_title: "Repeat Frequency",
-          });
-          copy_measure_parameters.push({
-            id: 3,
-            parameter_date: "0000-00-00",
-            parameter_title: "Start Date",
-          });
-          copy_measure_parameters.push({
-            id: 4,
-            parameter_date: "0000-00-00",
-            parameter_title: "End Date",
-          });
-          break;
-        case "related_expression":
-          copy_measure_parameters.push({
-            id: 1,
-            parameter_char: "",
-            parameter_title: "Expression",
-          });
-          break;
-        case "distributed":
-          copy_measure_parameters.push({
-            id: 1, //ids are required for form input management but this will be blown away by the database on submit
-            parameter_float: 0,
-            parameter_title: "Value",
-          });
-          copy_measure_parameters.push({
-            id: 2,
-            parameter_char: "",
-            parameter_title: "Distribution",
-          });
-          copy_measure_parameters.push({
-            id: 3,
-            parameter_date: "0000-00-00",
-            parameter_title: "Start Date",
-          });
-          copy_measure_parameters.push({
-            id: 4,
-            parameter_date: "0000-00-00",
-            parameter_title: "End Date",
-          });
-          break;
-        default:
-          break;
-      }
-      copy_measure.parameters = copy_measure_parameters;
-      return copy_measure
+  function addNewParameters(copy_measure) {
+    let copy_measure_parameters = copy_measure.parameters;
+    switch (copy_measure.type) {
+      case "fixed_value_at_date":
+        copy_measure_parameters.push({
+          id: 1, //ids are required for form input management but this will be blown away by the database on submit
+          parameter_float: 0,
+          parameter_title: "Value",
+        });
+        copy_measure_parameters.push({
+          id: 2,
+          parameter_date: "0000-00-00",
+          parameter_title: "Date",
+        });
+        break;
+      case "fixed_value":
+        copy_measure_parameters.push({
+          id: 1, //ids are required for form input management but this will be blown away by the database on submit
+          parameter_float: 0,
+          parameter_title: "Value",
+        });
+        break;
+      case "repeated":
+        copy_measure_parameters.push({
+          id: 1, //ids are required for form input management but this will be blown away by the database on submit
+          parameter_float: 0,
+          parameter_title: "Value",
+        });
+        copy_measure_parameters.push({
+          id: 2,
+          parameter_char: "daily",
+          parameter_title: "Repeat Frequency",
+        });
+        copy_measure_parameters.push({
+          id: 3,
+          parameter_date: "0000-00-00",
+          parameter_title: "Start Date",
+        });
+        copy_measure_parameters.push({
+          id: 4,
+          parameter_date: "0000-00-00",
+          parameter_title: "End Date",
+        });
+        break;
+      case "related_expression":
+        copy_measure_parameters.push({
+          id: 1,
+          parameter_char: "",
+          parameter_title: "Expression",
+        });
+        break;
+      case "distributed":
+        copy_measure_parameters.push({
+          id: 1, //ids are required for form input management but this will be blown away by the database on submit
+          parameter_float: 0,
+          parameter_title: "Value",
+        });
+        copy_measure_parameters.push({
+          id: 2,
+          parameter_char: "",
+          parameter_title: "Distribution",
+        });
+        copy_measure_parameters.push({
+          id: 3,
+          parameter_date: "0000-00-00",
+          parameter_title: "Start Date",
+        });
+        copy_measure_parameters.push({
+          id: 4,
+          parameter_date: "0000-00-00",
+          parameter_title: "End Date",
+        });
+        break;
+      default:
+        break;
     }
+    copy_measure.parameters = copy_measure_parameters;
+    return copy_measure;
+  }
 
   const [showModal, setShowModal] = useState(false);
   const handleModalClose = () => setShowModal(false);
@@ -459,7 +458,9 @@ function addNewParameters(copy_measure){
   }
 
   function renderParmeterFormInput(parameter) {
-    return (
+    
+    const title = parameter.parameter_title.toLowerCase()
+    let elements =       [
       <FloatingLabel
         controlId="floatingInput"
         label={parameter.parameter_title}
@@ -472,18 +473,22 @@ function addNewParameters(copy_measure){
           onSelect={handleFormChange}
           value={parameter[getNotNullParameterValue(parameter)]}
           type={
-            parameter.parameter_title.toLowerCase().includes("date")
+            title.includes("date")
               ? "date"
               : ""
           }
         />
-      </FloatingLabel>
+      </FloatingLabel>]
+    
+    
+    return (
+      elements
     );
   }
 
   function getParameter(name_str) {
-  console.log("measure state", state.measure)
-   console.log("parameters", state.measure.parameters);
+    console.log("measure state", state.measure);
+    console.log("parameters", state.measure.parameters);
     let param_index = state.measure.parameters.findIndex((value, index) => {
       return value.parameter_title
         .toLowerCase()
@@ -565,26 +570,26 @@ function addNewParameters(copy_measure){
   }
 
   function renderDistributionModal() {
-    if(state.measure.parameters){
-      console.log('going to get dates')
-    let start_date = getParameter("start date").parameter_date;
-    let end_date = getParameter("end date").parameter_date;
+    if (state.measure.parameters) {
+      console.log("going to get dates");
+      let start_date = getParameter("start date").parameter_date;
+      let end_date = getParameter("end date").parameter_date;
 
-    let distribution_state = getParameter("distribution").parameter_char
-    // let parameter_to_modify = state.measure.parameters.find((value) => {
-    //   return value.parameter_title.toLowerCase().includes("distribution");
-    // });
-    // //maybe make this a json field one day but...meh...
-    // let distribution_state = parameter_to_modify.parameter_char;
+      let distribution_state = getParameter("distribution").parameter_char;
+      // let parameter_to_modify = state.measure.parameters.find((value) => {
+      //   return value.parameter_title.toLowerCase().includes("distribution");
+      // });
+      // //maybe make this a json field one day but...meh...
+      // let distribution_state = parameter_to_modify.parameter_char;
 
-    return (
-      <DistributionModal
-        start_date={start_date}
-        end_date={end_date}
-        distribution_state={distribution_state}
-        insertCallBack={handleDistributionModalInsert}
-      />
-    );
+      return (
+        <DistributionModal
+          start_date={start_date}
+          end_date={end_date}
+          distribution_state={distribution_state}
+          insertCallBack={handleDistributionModalInsert}
+        />
+      );
     }
   }
 
@@ -647,51 +652,67 @@ function addNewParameters(copy_measure){
       }, 400);
     }
   };
-  if(state.measure){
-  return (
-    <div>
-      <Form onSubmit={handleFormSubmit}>
-        <FloatingLabel controlId="floatingInput" label="Title" className="mb-3">
-          <Form.Control
-            name="title"
-            placeholder="New Measure"
-            onChange={handleFormChange}
-            onSelect={handleFormChange}
-            value={state.measure ? state.measure.title : null}
-          />
-        </FloatingLabel>
-        <FloatingLabel controlId="floatingInput" label="Units" className="mb-3">
-          <Form.Control
-            name="units"
-            placeholder="Units"
-            onChange={handleFormChange}
-            onSelect={handleFormChange}
-            value={state.measure ? state.measure.units : null}
-          />
-        </FloatingLabel>
+  if (state.measure) {
+    return (
+      <div>
+        <Form onSubmit={handleFormSubmit}>
+          <Container>
+            <Row>
+              <Col>
+                <FloatingLabel
+                  controlId="floatingInput"
+                  label="Title"
+                  className="mb-3"
+                >
+                  <Form.Control
+                    name="title"
+                    placeholder="New Measure"
+                    onChange={handleFormChange}
+                    onSelect={handleFormChange}
+                    value={state.measure ? state.measure.title : null}
+                  />
+                </FloatingLabel>
+              </Col>
+              <Col>
+                <FloatingLabel
+                  controlId="floatingInput"
+                  label="Units"
+                  className="mb-3"
+                >
+                  <Form.Control
+                    name="units"
+                    placeholder="Units"
+                    onChange={handleFormChange}
+                    onSelect={handleFormChange}
+                    value={state.measure ? state.measure.units : null}
+                  />
+                </FloatingLabel>
+              </Col>
+            </Row>
+          </Container>
 
-        <div>{renderFormSelectType()}</div>
+          <div>{renderFormSelectType()}</div>
 
-        <Accordion defaultActiveKey="0">
-          <Accordion.Item
-            eventKey="0"
-            ref={accordElem}
-            onClick={() => {
-              handleClickToggle("0");
-            }}
-          >
-            <Accordion.Header>Parameters</Accordion.Header>
-            <Accordion.Body>
-              <div>{renderParameters()}</div>
-            </Accordion.Body>
-          </Accordion.Item>
-        </Accordion>
-        <br />
-        <Button type="submit">Submit</Button>
-        {renderDeleteButton()}
-      </Form>
-      {renderDeleteModal()}
-    </div>
-  );
+          <Accordion defaultActiveKey="0">
+            <Accordion.Item
+              eventKey="0"
+              ref={accordElem}
+              onClick={() => {
+                handleClickToggle("0");
+              }}
+            >
+              <Accordion.Header>Parameters</Accordion.Header>
+              <Accordion.Body>
+                <div>{renderParameters()}</div>
+              </Accordion.Body>
+            </Accordion.Item>
+          </Accordion>
+          <br />
+          <Button type="submit">Submit</Button>{" "}
+          {renderDeleteButton()}
+        </Form>
+        {renderDeleteModal()}
+      </div>
+    );
   }
 }

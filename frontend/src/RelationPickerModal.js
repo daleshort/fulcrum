@@ -58,8 +58,8 @@ export default function RelationPickerModal({insertCallBack}) {
     setShowRelationModal(false);
   };
   return (
-    <div>
-      <Button onClick={handleRelationModalShow}>Pick Related Parameter</Button>
+    
+      <Button onClick={handleRelationModalShow}>Pick Related Parameter
       <Modal show={showRelationModal} onHide={handleRelationModalClose}>
         <Modal.Header closeButton>
           <Modal.Title>Select Measure</Modal.Title>
@@ -90,6 +90,6 @@ export default function RelationPickerModal({insertCallBack}) {
           <Button onClick={handleRelationModalInsert}>Insert</Button>
         </Modal.Footer>
       </Modal>
-    </div>
+      </Button>
   );
 }

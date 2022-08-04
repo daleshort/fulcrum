@@ -233,7 +233,7 @@ def executeDependentUpdate(measure, list_of_measure_ids) -> bool:
             working_parameter_expression = working_parameter_expression.replace(
                 m[0], str(measure_value))
         print(working_parameter_expression)
-        expression_result = eval(working_parameter_expression)
+        expression_result = eval(working_parameter_expression, {},{})
         Results.objects.create(project=measure.project,
                                measure=measure, measure_result=expression_result, date=d)
     return True

@@ -80,7 +80,7 @@ export default function Measures({ activeProjectProp = null }) {
     };
     if (activeProjectProp != "new") {
       return (
-        <Card>
+        
           <Accordion.Item key="new" eventKey="0" ref={accordElem}>
             <Accordion.Header
               onClick={() => {
@@ -97,7 +97,7 @@ export default function Measures({ activeProjectProp = null }) {
               />
             </Accordion.Body>
           </Accordion.Item>
-        </Card>
+        
       );
     }
   }
@@ -132,8 +132,9 @@ export default function Measures({ activeProjectProp = null }) {
 
   return (
     <div>
-      <div>Measures for project ID: {activeProjectProp} </div>
+
       <div>{renderAccordion()}</div>
+      <div className="bottom-padding"></div>
     </div>
   );
 }
