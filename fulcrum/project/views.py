@@ -53,6 +53,8 @@ class ConsolidateResults(APIView):
         response_data = queryset.values()
       #  print("response_data", response_data)
         min_date = response_data[0]['date']
+        if isinstance(min_date,type(None)):
+            min_date = response_data[1]['date']
 
         base_data = response_data[0]
 

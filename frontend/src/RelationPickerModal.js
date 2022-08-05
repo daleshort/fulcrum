@@ -14,28 +14,29 @@ import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 
-export default function RelationPickerModal({insertCallBack}) {
-  const [showRelationModal, setShowRelationModal] = useState(false);
+export default function RelationPickerModal({ insertCallBack }) {
   const handleRelationModalClose = () => {
-    setShowRelationModal(false);
+    console.log("closing relation modal");
     setState({
+      showModal:false,
       selected_project_to_insert: null,
       selected_measure_to_insert: null,
     });
   };
-  const handleRelationModalShow = () => setShowRelationModal(true);
-  useEffect(handleRelationModalClose, []);
+  const handleRelationModalShow = () => setState({showModal:true});
 
   const [state, setState] = useReducer(
     (state, newState) => ({ ...state, ...newState }),
     {
       selected_project_to_insert: null,
-      project_title_to_insert: null,  
+      project_title_to_insert: null,
       selected_measure_to_insert: null,
-      measure_title_to_insert: null, 
+      measure_title_to_insert: null,
       relation_modal_target: null,
+      showModal:false,
     }
   );
+  useEffect(()=>{console.log("modal state", state.showModal)}, [state.showModal]);
 
   const handleSelectedProjectToInsert = (project_id, project_title) => {
     setState({
@@ -54,13 +55,23 @@ export default function RelationPickerModal({insertCallBack}) {
   };
 
   const handleRelationModalInsert = () => {
-    insertCallBack(state.selected_project_to_insert,state.project_title_to_insert, state.selected_measure_to_insert,state.measure_title_to_insert);
-    setShowRelationModal(false);
+    insertCallBack(
+      state.selected_project_to_insert,
+      state.project_title_to_insert,
+      state.selected_measure_to_insert,
+      state.measure_title_to_insert
+    );
+    setState({showModal:false});
   };
   return (
-    
-      <Button onClick={handleRelationModalShow}>Pick Related Parameter
-      <Modal show={showRelationModal} onHide={handleRelationModalClose}>
+    <Button onClick={handleRelationModalShow}>
+      Pick Related Parameter
+      <div onClick={e => e.stopPropagation()}>
+      <Modal
+        show={state.showModal}
+        onHide={handleRelationModalClose}
+        key={1234}
+      >
         <Modal.Header closeButton>
           <Modal.Title>Select Measure</Modal.Title>
         </Modal.Header>
@@ -90,6 +101,7 @@ export default function RelationPickerModal({insertCallBack}) {
           <Button onClick={handleRelationModalInsert}>Insert</Button>
         </Modal.Footer>
       </Modal>
-      </Button>
+      </div>
+    </Button>
   );
 }

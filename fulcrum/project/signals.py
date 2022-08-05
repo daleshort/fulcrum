@@ -179,12 +179,23 @@ def executeDependentUpdate(measure, list_of_measure_ids) -> bool:
     parameter_expression = stripExpressionOfHumanReadable(parameter_expression)
     offset_list = getListOfDateOffsets(parameter_expression)
 
+    def getDate(x,offset):
+        date = x['date']
+        print('date', date)
+        print('date type:', type(date))
+        if isinstance(date, type(None)):
+            return None
+        else:
+            return date - offset
+
     list_of_dates = []
     for index,id in enumerate(list_of_measure_ids):
 
         values_list_of_dict = Results.objects.filter(
             measure=id).values("date")
-        values_unpacked_list = [x['date']-offset_list[index] for x in values_list_of_dict]
+        offset = offset_list[index]
+
+        values_unpacked_list = [getDate(x,offset) for x in values_list_of_dict]
         list_of_dates = list_of_dates + values_unpacked_list
     # Make list of dates only unique
     list_of_dates = (list(set(list_of_dates)))
@@ -225,9 +236,12 @@ def executeDependentUpdate(measure, list_of_measure_ids) -> bool:
                 delta = relativedelta(days=0)
 
             print('offset amount', offset_amount)
-
+            if isinstance(d,type(None)):
+                date_to_check = d
+            else:
+                date_to_check = d+delta
             measure_value = getMeasureResultForDateOrAssume(
-                child_measure_id, d+delta)
+                child_measure_id, date_to_check)
             print("measure value:", measure_value)
 
             working_parameter_expression = working_parameter_expression.replace(

@@ -103,21 +103,26 @@ export default function MeasureVisuals({ visual_id = null }) {
 
   function renderInputForm(key, value) {
     if (key == "collect") {
-      return (<div><Form.Select
-      name={key}
-      onChange={(event) => {
-        handleFormChange(event, value.id);
-      }}
-      onSelect={(event) => {
-        handleFormChange(event, value.id);
-      }}
-      value={value[key]}
-    >
-      <option value={null}>Select</option>
-      <option value={"monthly"}>monthly</option>
-    </Form.Select><br/></div>)
+      return (
+        <div>
+          <Form.Select
+            name={key}
+            onChange={(event) => {
+              handleFormChange(event, value.id);
+            }}
+            onSelect={(event) => {
+              handleFormChange(event, value.id);
+            }}
+            value={value[key]}
+          >
+            <option value={null}>Select</option>
+            <option value={"monthly"}>monthly</option>
+          </Form.Select>
+          <br />
+        </div>
+      );
     } else {
-      if(!checkForDeactivated(key)){
+      if (!checkForDeactivated(key)) {
         return (
           <FloatingLabel
             controlId="floatingInput"
@@ -140,7 +145,6 @@ export default function MeasureVisuals({ visual_id = null }) {
           </FloatingLabel>
         );
       }
-
     }
   }
   function handleFormChange(event, measurevisual_id) {
@@ -185,7 +189,7 @@ export default function MeasureVisuals({ visual_id = null }) {
       return true;
     } else if (key.toLowerCase() == "project_title") {
       return true;
-    } else if (key.toLowerCase()=="style_color"){
+    } else if (key.toLowerCase() == "style_color") {
       return true;
     }
     return false;
@@ -293,8 +297,7 @@ export default function MeasureVisuals({ visual_id = null }) {
                             value.id
                           );
                         }}
-                      />
-                        {" "}
+                      />{" "}
                       <Button
                         variant="danger"
                         onClick={() => {
@@ -581,7 +584,7 @@ export default function MeasureVisuals({ visual_id = null }) {
     );
 
     const options_bar = {
-     // skipNull:true,  // I think if I padded the data with null values I could get the axis to skip these?
+      // skipNull:true,  // I think if I padded the data with null values I could get the axis to skip these?
       responsive: true,
       // scales: {
       //   x: {
@@ -673,7 +676,7 @@ export default function MeasureVisuals({ visual_id = null }) {
         return (
           <div>
             {chart()}
-            <br/>
+            <br />
             {data_for_chart.datasets.map((dataset) => {
               return (
                 <div>
@@ -751,7 +754,6 @@ export default function MeasureVisuals({ visual_id = null }) {
     <div>
       {renderChartJS()}
       {renderMeasureVisualList()}
-      
     </div>
   );
 }
