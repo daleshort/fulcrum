@@ -6,21 +6,27 @@ import Navbar from "react-bootstrap/Navbar";
 import Container from "react-bootstrap/esm/Container";
 import Nav from "react-bootstrap/Nav";
 import Visualize from "./Visualize";
-
+import Home from "./Home";
+import About from "./About";
 
 export default function AppView() {
   const [state, setState] = useReducer(
     (state, newState) => ({ ...state, ...newState }),
     {
-      page: "visualize",
+      page: "home",
     }
   );
 
   function renderContents() {
     if (state.page == "measure manager") {
       return <MeasureManager />;
-    } else if (state.page == "visualize"){
-        return <Visualize/>
+    } else if (state.page == "visualize") {
+      return <Visualize />;
+    } else if (state.page == "home") {
+      return <Home />;
+    } else if (state.page == "about") {
+      console.log("selecting about")
+      return <About />;
     }
   }
 
@@ -34,6 +40,13 @@ export default function AppView() {
             <Nav className="me-auto">
               <Nav.Link
                 onClick={() => {
+                  setState({ page: "home" });
+                }}
+              >
+                Home
+              </Nav.Link>
+              <Nav.Link
+                onClick={() => {
                   setState({ page: "measure manager" });
                 }}
               >
@@ -45,6 +58,13 @@ export default function AppView() {
                 }}
               >
                 Visualize
+              </Nav.Link>
+              <Nav.Link
+                onClick={() => {
+                  setState({ page: "about" });
+                }}
+              >
+                About
               </Nav.Link>
             </Nav>
           </Navbar.Collapse>

@@ -228,6 +228,28 @@ export default function MeasureDetail({
           parameter_title: "End Date",
         });
         break;
+        case "scaled":
+          copy_measure_parameters.push({
+            id: 1, //ids are required for form input management but this will be blown away by the database on submit
+            parameter_float: 0,
+            parameter_title: "Value",
+          });
+          copy_measure_parameters.push({
+            id: 2,
+            parameter_char: "",
+            parameter_title: "Distribution",
+          });
+          copy_measure_parameters.push({
+            id: 3,
+            parameter_date: "0000-00-00",
+            parameter_title: "Start Date",
+          });
+          copy_measure_parameters.push({
+            id: 4,
+            parameter_date: "0000-00-00",
+            parameter_title: "End Date",
+          });
+          break;
       default:
         break;
     }
@@ -536,7 +558,7 @@ export default function MeasureDetail({
             });
             return repeat_elements.concat(other_params_elements);
           }
-        } else if (state.measure.type == "distributed") {
+        } else if (state.measure.type == "distributed"  || state.measure.type == "scaled") {
           return state.measure.parameters
             .map((x, i) => {
               return [renderParmeterFormInput(x)];
@@ -610,6 +632,7 @@ export default function MeasureDetail({
                 Fixed value at a date
               </option>
               <option value={"repeated"}>Repeated Measure</option>
+              <option value={"scaled"}>Scaled Measure</option>
               <option value={"distributed"}>Distributed Measure</option>
               <option value={"related_expression"}>Related Expression</option>
             </Form.Select>

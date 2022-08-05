@@ -23,6 +23,55 @@ def processFixed(measure):
                            measure=measure, measure_result=parameter_float)
     return True
 
+def processScaled(measure):
+    # clear out the measures
+    Results.objects.filter(measure=measure.id).delete()
+    #write in new
+    
+    parameter_start_date = measure.parameters.get(
+        parameter_title="Start Date").parameter_date
+
+
+    parameter_end_date= measure.parameters.get(
+        parameter_title="End Date").parameter_date
+
+    distribution_str = measure.parameters.get(
+        parameter_title="Distribution").parameter_char
+
+    parameter_float = measure.parameters.get(
+        parameter_title="Value").parameter_float
+
+    delta = relativedelta(days=1)
+    distribution_array = [float(i) for i in distribution_str.split(',')]
+    
+    print("distribution array", distribution_array)
+    print("date span days", (parameter_end_date -parameter_start_date).days)
+    date_span_days =(parameter_end_date -parameter_start_date).days
+    time_step = date_span_days/(len(distribution_array)-1)
+    time_array = []
+    for i,val in enumerate(distribution_array):
+        time_array.append(i*time_step)
+    print("time array", time_array)
+
+    #get function
+    poly_distribution = interp1d(time_array,distribution_array, kind='cubic')
+    #get integral of function
+    distribution_area = quad(poly_distribution,time_array[0],time_array[-1],points=time_array)[0]
+    print("distribution area", distribution_area)
+
+    date = parameter_start_date
+    date_offset = 0
+    while date< parameter_end_date:
+        date = date + relativedelta(days = 1)
+        #note compared to distributed we don't divide by the area on the next line
+        #we do divide by 100 because the poly is a 0-100 scale but represents %
+        result = poly_distribution(date_offset) * parameter_float/100
+        Results.objects.create(project=measure.project,
+                                measure=measure, measure_result=result, date=date)
+        date_offset += 1
+    return True
+
+
 def processDistributed(measure):
     # clear out the measures
     Results.objects.filter(measure=measure.id).delete()
@@ -311,6 +360,8 @@ def measure_update_router(measure) -> bool:
         result = processRelatedExpression(measure)
     elif measure.type == "distributed":
         result = processDistributed(measure)
+    elif measure.type == "scaled":
+        result = processScaled(measure)
     return result
 
 
