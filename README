@@ -1,1 +1,1 @@
-Test
+Fulcrum Focus is a numeric project forecasting tool. It replaces spreadsheets of interconnected formulas by automatically calculating forecasted data and generating visualizations based off of measurements defined for a project.  A web GUI built in React allows a user to quickly build a project model and view charts and graphs of the resulting data.  A SQL relational database accessed using Django is used to store configuration and forecast data.
