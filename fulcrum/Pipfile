@@ -12,6 +12,8 @@ prettier = "*"
 django-cors-headers = "*"
 python-dateutil = "*"
 scipy = "*"
+djoser = "*"
+djangorestframework-simplejwt = "*"
 
 [dev-packages]
 autopep8 = "*"

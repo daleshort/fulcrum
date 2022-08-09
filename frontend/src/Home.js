@@ -1,12 +1,8 @@
 import React from "react";
-import logo from "./initechLogo.png"
+import Users from "./Users";
+import Register from "./Register";
 
 export default function Home() {
-
-  return (
-    <div className="flex-title">
-      {" "}
-      <img src={logo} />
-    </div>
-  );
+  // return <Users />;
+   return <Register />;
 }
