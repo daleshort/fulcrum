@@ -1,14 +1,10 @@
 import "./bootstrap.min.css";
 import "./layout.css";
 import React, { useReducer } from "react";
-import MeasureManager from "./MeasureManager";
 import Navbar from "react-bootstrap/Navbar";
 import Container from "react-bootstrap/esm/Container";
 import Nav from "react-bootstrap/Nav";
-import Visualize from "./Visualize";
-import Home from "./Home";
-import About from "./About";
-import { Outlet } from "react-router-dom";
+import { Outlet, Link} from "react-router-dom";
 
 export default function Layout() {
   const [state, setState] = useReducer(
@@ -26,28 +22,28 @@ export default function Layout() {
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
           <Navbar.Collapse id="basic-navbar-nav">
             <Nav className="me-auto">
-              <Nav.Link
-              href='/login'
+              <Nav.Link as={Link}
+              to='/login'
               >
                 Login
               </Nav.Link>
-              <Nav.Link
-              href='/register'
+              <Nav.Link as={Link}
+              to='/register'
               >
                 Register
               </Nav.Link>
-              <Nav.Link
-                href='/measures'
+              <Nav.Link as={Link}
+                to='/measures'
               >
                 Measures
               </Nav.Link>
-              <Nav.Link
-                href='/visualize'
+              <Nav.Link as={Link}
+                to='/visualize'
               >
                 Visualize
               </Nav.Link>
-              <Nav.Link
-                href='/users'
+              <Nav.Link as={Link}
+                to='/users'
               >
                 Users
               </Nav.Link>
