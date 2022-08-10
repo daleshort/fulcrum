@@ -1,5 +1,5 @@
 import "./bootstrap.min.css";
-import "./AppView.css";
+import "./layout.css";
 import React, { useReducer } from "react";
 import MeasureManager from "./MeasureManager";
 import Navbar from "react-bootstrap/Navbar";
@@ -8,27 +8,15 @@ import Nav from "react-bootstrap/Nav";
 import Visualize from "./Visualize";
 import Home from "./Home";
 import About from "./About";
+import { Outlet } from "react-router-dom";
 
-export default function AppView() {
+export default function Layout() {
   const [state, setState] = useReducer(
     (state, newState) => ({ ...state, ...newState }),
     {
       page: "home",
     }
   );
-
-  function renderContents() {
-    if (state.page == "measure manager") {
-      return <MeasureManager />;
-    } else if (state.page == "visualize") {
-      return <Visualize />;
-    } else if (state.page == "home") {
-      return <Home />;
-    } else if (state.page == "about") {
-      console.log("selecting about")
-      return <About />;
-    }
-  }
 
   return (
     <div>
@@ -39,38 +27,35 @@ export default function AppView() {
           <Navbar.Collapse id="basic-navbar-nav">
             <Nav className="me-auto">
               <Nav.Link
-                onClick={() => {
-                  setState({ page: "home" });
-                }}
+              href='/login'
               >
-                Home
+                Login
               </Nav.Link>
               <Nav.Link
-                onClick={() => {
-                  setState({ page: "measure manager" });
-                }}
+              href='/register'
+              >
+                Register
+              </Nav.Link>
+              <Nav.Link
+                href='/measures'
               >
                 Measures
               </Nav.Link>
               <Nav.Link
-                onClick={() => {
-                  setState({ page: "visualize" });
-                }}
+                href='/visualize'
               >
                 Visualize
               </Nav.Link>
               <Nav.Link
-                onClick={() => {
-                  setState({ page: "about" });
-                }}
+                href='/users'
               >
-                About
+                Users
               </Nav.Link>
             </Nav>
           </Navbar.Collapse>
         </Container>
       </Navbar>
-      {renderContents()}
+      <Outlet/>
     </div>
   );
 }
