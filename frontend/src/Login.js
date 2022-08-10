@@ -3,8 +3,9 @@ import { useRef, useState, useEffect } from "react";
 import useAuth from "./hooks/useAuth";
 
 import { Link, useNavigate, useLocation } from "react-router-dom";
-
+import Form from "react-bootstrap/form"
 import axios from "./api/axios";
+import Button from "react-bootstrap/esm/Button";
 
 const Login = () => {
   const { setAuth } = useAuth();
@@ -65,8 +66,8 @@ const Login = () => {
     }
   };
 
-  return (
-    <section>
+  const getForm = ()=>{
+    return( <section>
       <p
         ref={errRef}
         className={errMsg ? "errmsg" : "offscreen"}
@@ -74,10 +75,11 @@ const Login = () => {
       >
         {errMsg}
       </p>
-      <h1>Sign In</h1>
-      <form onSubmit={handleSubmit}>
-        <label htmlFor="username">Username:</label>
-        <input
+      
+      <Form onSubmit={handleSubmit}>
+      <Form.Group>
+        <Form.Label htmlFor="username">Username:</Form.Label>
+        <Form.Control
           type="text"
           id="username"
           ref={userRef}
@@ -86,26 +88,50 @@ const Login = () => {
           value={user}
           required
         />
-
-        <label htmlFor="password">Password:</label>
-        <input
+        </Form.Group>
+        <Form.Group>
+        <Form.Label htmlFor="password">Password:</Form.Label>
+        <Form.Control
           type="password"
           id="password"
           onChange={(e) => setPwd(e.target.value)}
           value={pwd}
           required
         />
-        <button>Sign In</button>
-      </form>
+        </Form.Group>
+        <br/>
+        <Button type="submit">Sign In</Button>
+      </Form>
       <p>
         Need an Account?
         <br />
         <span className="line">
-          {/*put router link here*/}
-          <a href="#">Sign Up</a>
+          
+          <Link to='/register'>Sign Up</Link>
         </span>
       </p>
-    </section>
+    </section>)
+  }
+
+  return (
+
+    <div className="flex-container">
+        <div className="flex-title">
+          <div className="title-text-only">
+
+          <div>
+
+             Login
+
+
+            </div>
+
+          </div>
+        </div>
+        <div className="flex-item">
+          {getForm()}
+        </div>
+      </div>
   );
 };
 

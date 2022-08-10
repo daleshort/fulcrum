@@ -5,7 +5,7 @@
     min-width: 800px;
   }
   .flex-item{
-    min-width: 800px;
+    min-width: 600px;
     align-content: center;
 }
 
@@ -15,6 +15,9 @@
     min-width: 800px;
     padding-top: 20px;
     padding-bottom: 20px;
+    font-size: 1.25rem;
+    color: white;
+    
   }
 
 .bottom-padding{
@@ -23,6 +26,18 @@
         padding-top: 20px;
         padding-bottom: 20px;
 
+}
+
+.title-text-only{
+  min-height:48px;
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  align-content: center;
+  justify-items: center;
+  align-items: center;
+  background-color: rgb(49, 108,244);
+  border-radius: 5px;
 }
 
   .title-bar{

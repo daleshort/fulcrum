@@ -51,12 +51,18 @@ export default function Layout() {
                 id="nav-dropdown"
                 variant="secondary"
               >
+                {auth?.user && (
+                  <NavDropdown.Item eventKey="logout">Logout</NavDropdown.Item>
+                )}
+                {!auth?.user && (
                 <NavDropdown.Item eventKey="login">Login</NavDropdown.Item>
-                <NavDropdown.Item eventKey="logout">Logout</NavDropdown.Item>
-                <NavDropdown.Divider />
+                )}
+                {!auth?.user && ([
+                <NavDropdown.Divider />,
                 <NavDropdown.Item eventKey="register">
                   Register
-                </NavDropdown.Item>
+                </NavDropdown.Item>]
+                )}
               </NavDropdown>
             </Nav>
           </Navbar.Collapse>
