@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react";
 import useAxiosPrivate from "./hooks/useAxiosPrivate";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const Users = () =>{
     const [users,setUsers] = useState();
     const axiosPrivate = useAxiosPrivate();
+    const navigate = useNavigate();
+    const location = useLocation();
 
     useEffect(()=>{
         let isMounted = true;
@@ -18,6 +21,9 @@ const Users = () =>{
                 isMounted && setUsers(response.data)
             } catch(err){
                 console.error(err)
+                if(err.code !== 'ERR_CANCELED'){
+                navigate('/login', {state: {from:location}, replace:true });
+                }
             }
         }
 
