@@ -1,4 +1,12 @@
-Fulcrum Focus is a numeric project forecasting tool. It replaces spreadsheets of interconnected formulas by automatically calculating forecasted data and generating visualizations based off of measurements defined for a project.  A web GUI built in React allows a user to quickly build a project model and view charts and graphs of the resulting data.  A SQL relational database accessed using Django is used to store configuration and forecast data. 
+# Fulcrum Forecast
+
+<!-- wp:buttons -->
+<div class="wp-block-buttons"><!-- wp:button {"gradient":"vivid-cyan-blue-to-vivid-purple","width":75,"align":"center","style":{"border":{"radius":"0px"}}} -->
+<div class="wp-block-button aligncenter has-custom-width wp-block-button__width-75"><a class="wp-block-button__link has-vivid-cyan-blue-to-vivid-purple-gradient-background has-background" href="https://programmerd.com/fulcrum/" style="border-radius:0px" target="_blank" rel="noreferrer noopener"><strong>Live Demo</strong></a></div>
+<!-- /wp:button --></div>
+<!-- /wp:buttons -->
+
+Fulcrum Forecast is a numeric project forecasting tool. It replaces spreadsheets of interconnected formulas by automatically calculating forecasted data and generating visualizations based off of measurements defined for a project.  A web GUI built in React allows a user to quickly build a project model and view charts and graphs of the resulting data.  A SQL relational database accessed using Django is used to store configuration and forecast data. 
 
 
 <!-- wp:heading -->
